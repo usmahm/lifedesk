@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "stone",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@lifedesk/ui/components",
+    "utils": "@lifedesk/ui/lib/utils",
+    "hooks": "@lifedesk/ui/hooks",
+    "lib": "@lifedesk/ui/lib",
+    "ui": "@lifedesk/ui/components"
+  }
+}

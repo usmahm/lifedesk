@@ -1,0 +1,11 @@
+{
+  "extends": "@lifedesk/typescript-config/nextjs.json",
+  "compilerOptions": {
+    // No baseUrl — deprecated in TS 6. Paths resolve relative to this file.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts", "*.ts", "*.mjs"],
+  "exclude": ["node_modules", ".next"]
+}

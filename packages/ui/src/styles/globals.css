@@ -1,0 +1,232 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@source "../**/*.{ts,tsx}";
+@source "../../../../apps/web/src/**/*.{ts,tsx}";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * LifeDesk — Calm workspace.
+ *
+ * Warm paper ground, one restrained accent, generous space. Reads like a
+ * well-made notebook, not a dashboard. Full rationale in docs/PLAN.md §4;
+ * the rules for using these live in .claude/rules/design-tokens.md.
+ *
+ * Two are load-bearing:
+ *   1. Area colour is a dot or a 3px edge — NEVER a filled background.
+ *   2. --focus means "a session is running" and nothing else. Not success,
+ *      not valid, not completed. That reservation is why peripheral vision
+ *      can tell you the clock is going.
+ */
+
+:root {
+  --radius: 0.625rem;
+
+  /* warm paper */
+  --background: oklch(0.99 0.004 85);
+  --foreground: oklch(0.22 0.008 75);
+
+  --card: oklch(0.995 0.003 85);
+  --card-foreground: oklch(0.22 0.008 75);
+  --popover: oklch(1 0.002 85);
+  --popover-foreground: oklch(0.22 0.008 75);
+
+  /* clay — nods at the tomato without being a cartoon */
+  --primary: oklch(0.55 0.13 40);
+  --primary-foreground: oklch(0.99 0.005 85);
+
+  --secondary: oklch(0.96 0.006 85);
+  --secondary-foreground: oklch(0.28 0.01 75);
+  --muted: oklch(0.96 0.006 85);
+  --muted-foreground: oklch(0.52 0.012 75);
+  --accent: oklch(0.955 0.008 80);
+  --accent-foreground: oklch(0.26 0.01 75);
+
+  --destructive: oklch(0.58 0.19 27);
+  --destructive-foreground: oklch(0.99 0.005 85);
+
+  /* capacity meter past 100% */
+  --warning: oklch(0.72 0.14 70);
+  --warning-foreground: oklch(0.22 0.008 75);
+
+  /* a session is running — reserved, see above */
+  --focus: oklch(0.62 0.11 155);
+  --focus-foreground: oklch(0.99 0.005 85);
+
+  --border: oklch(0.92 0.006 85);
+  --input: oklch(0.92 0.006 85);
+  --ring: oklch(0.55 0.13 40);
+
+  /* fixed 8-hue area palette — an area looks identical everywhere */
+  --area-clay: oklch(0.58 0.14 40);
+  --area-amber: oklch(0.66 0.13 70);
+  --area-olive: oklch(0.56 0.1 120);
+  --area-teal: oklch(0.56 0.09 190);
+  --area-indigo: oklch(0.55 0.13 265);
+  --area-plum: oklch(0.52 0.13 320);
+  --area-rose: oklch(0.6 0.15 15);
+  --area-slate: oklch(0.55 0.02 250);
+
+  --chart-1: var(--area-clay);
+  --chart-2: var(--area-teal);
+  --chart-3: var(--area-indigo);
+  --chart-4: var(--area-amber);
+  --chart-5: var(--area-olive);
+
+  --sidebar: oklch(0.975 0.005 85);
+  --sidebar-foreground: oklch(0.22 0.008 75);
+  --sidebar-primary: oklch(0.55 0.13 40);
+  --sidebar-primary-foreground: oklch(0.99 0.005 85);
+  --sidebar-accent: oklch(0.95 0.008 80);
+  --sidebar-accent-foreground: oklch(0.26 0.01 75);
+  --sidebar-border: oklch(0.92 0.006 85);
+  --sidebar-ring: oklch(0.55 0.13 40);
+}
+
+/* Designed, not inverted. Evening work is most of the point. */
+.dark {
+  --background: oklch(0.18 0.006 70);
+  --foreground: oklch(0.93 0.006 85);
+
+  --card: oklch(0.21 0.007 70);
+  --card-foreground: oklch(0.93 0.006 85);
+  --popover: oklch(0.22 0.007 70);
+  --popover-foreground: oklch(0.93 0.006 85);
+
+  --primary: oklch(0.68 0.13 42);
+  --primary-foreground: oklch(0.18 0.006 70);
+
+  --secondary: oklch(0.26 0.008 70);
+  --secondary-foreground: oklch(0.93 0.006 85);
+  --muted: oklch(0.24 0.008 70);
+  --muted-foreground: oklch(0.68 0.012 80);
+  --accent: oklch(0.28 0.009 70);
+  --accent-foreground: oklch(0.93 0.006 85);
+
+  --destructive: oklch(0.65 0.18 27);
+  --destructive-foreground: oklch(0.18 0.006 70);
+
+  --warning: oklch(0.76 0.13 70);
+  --warning-foreground: oklch(0.18 0.006 70);
+
+  --focus: oklch(0.7 0.12 155);
+  --focus-foreground: oklch(0.18 0.006 70);
+
+  --border: oklch(0.3 0.008 70);
+  --input: oklch(0.32 0.008 70);
+  --ring: oklch(0.68 0.13 42);
+
+  --area-clay: oklch(0.68 0.13 40);
+  --area-amber: oklch(0.76 0.12 70);
+  --area-olive: oklch(0.68 0.1 120);
+  --area-teal: oklch(0.68 0.09 190);
+  --area-indigo: oklch(0.67 0.12 265);
+  --area-plum: oklch(0.65 0.12 320);
+  --area-rose: oklch(0.7 0.14 15);
+  --area-slate: oklch(0.68 0.02 250);
+
+  --sidebar: oklch(0.21 0.007 70);
+  --sidebar-foreground: oklch(0.93 0.006 85);
+  --sidebar-primary: oklch(0.68 0.13 42);
+  --sidebar-primary-foreground: oklch(0.18 0.006 70);
+  --sidebar-accent: oklch(0.28 0.009 70);
+  --sidebar-accent-foreground: oklch(0.93 0.006 85);
+  --sidebar-border: oklch(0.3 0.008 70);
+  --sidebar-ring: oklch(0.68 0.13 42);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-focus: var(--focus);
+  --color-focus-foreground: var(--focus-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-area-clay: var(--area-clay);
+  --color-area-amber: var(--area-amber);
+  --color-area-olive: var(--area-olive);
+  --color-area-teal: var(--area-teal);
+  --color-area-indigo: var(--area-indigo);
+  --color-area-plum: var(--area-plum);
+  --color-area-rose: var(--area-rose);
+  --color-area-slate: var(--area-slate);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans text-sm antialiased;
+  }
+
+  /*
+   * Every number that changes over time or sits in a column gets tabular
+   * figures. A counting clock on proportional digits shifts width on every
+   * tick, and once you notice the jitter you can't unsee it.
+   */
+  .tabular-nums,
+  time,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/*
+ * Nothing moves that the user didn't move. The reduced path is instant,
+ * not merely faster.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

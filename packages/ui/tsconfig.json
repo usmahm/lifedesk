@@ -1,0 +1,11 @@
+{
+  "extends": "@lifedesk/typescript-config/react-library.json",
+  "compilerOptions": {
+    // No baseUrl — deprecated in TS 6. Paths resolve relative to this file.
+    "paths": {
+      "@lifedesk/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.js"],
+  "exclude": ["node_modules", "dist"]
+}

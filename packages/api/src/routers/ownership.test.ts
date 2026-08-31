@@ -1,0 +1,255 @@
+import { call, isDefinedError, ORPCError } from "@orpc/server";
+import { beforeEach, describe, expect, it } from "vitest";
+
+import { fixedClock } from "../clock";
+import type { Context } from "../context";
+import { createTestRepos } from "../repos/index";
+import type { Repos } from "../repos/types";
+import { appRouter } from "./index";
+
+/**
+ * The check that actually matters.
+ *
+ * `protectedProcedure` proves who is calling; it says nothing about what they
+ * own. An authenticated user requesting someone else's row is where real apps
+ * leak, so every router gets a test asserting it reads as absent — NOT_FOUND,
+ * never FORBIDDEN, because "forbidden" confirms the record exists.
+ */
+
+const USER_A = "00000000-0000-4000-8000-00000000000a";
+const USER_B = "00000000-0000-4000-8000-00000000000b";
+
+const NOW = new Date("2026-08-30T09:00:00Z");
+
+let repos: Repos;
+
+function ctx(userId: string): Context {
+  return { userId, repos, now: fixedClock(NOW) };
+}
+
+/** Asserts a cross-user read is indistinguishable from a missing row. */
+async function expectNotFound(promise: Promise<unknown>): Promise<void> {
+  await expect(promise).rejects.toSatisfy((error: unknown) => {
+    expect(error).toBeInstanceOf(ORPCError);
+    expect((error as ORPCError<string, unknown>).code).toBe("NOT_FOUND");
+    return true;
+  });
+}
+
+beforeEach(() => {
+  repos = createTestRepos({ now: fixedClock(NOW), seed: false });
+});
+
+describe("unauthenticated access", () => {
+  it("is rejected before any handler runs", async () => {
+    const anonymous: Context = { userId: null, repos, now: fixedClock(NOW) };
+
+    await expect(
+      call(appRouter.task.list, { filters: {}, page: {} }, { context: anonymous }),
+    ).rejects.toSatisfy((error: unknown) => {
+      expect((error as ORPCError<string, unknown>).code).toBe("UNAUTHORIZED");
+      return true;
+    });
+  });
+});
+
+describe("areas", () => {
+  it("hides another user's area", async () => {
+    const area = await call(
+      appRouter.area.create,
+      { name: "Research", color: "indigo", icon: null },
+      { context: ctx(USER_A) },
+    );
+
+    await expect(call(appRouter.area.get, { id: area.id }, { context: ctx(USER_A) })).resolves
+      .toBeDefined();
+
+    await expectNotFound(call(appRouter.area.get, { id: area.id }, { context: ctx(USER_B) }));
+    await expectNotFound(
+      call(appRouter.area.update, { id: area.id, name: "Hijacked" }, { context: ctx(USER_B) }),
+    );
+    await expectNotFound(
+      call(appRouter.area.setArchived, { id: area.id, archived: true }, { context: ctx(USER_B) }),
+    );
+  });
+
+  it("does not list another user's areas", async () => {
+    await call(
+      appRouter.area.create,
+      { name: "Research", color: "indigo", icon: null },
+      { context: ctx(USER_A) },
+    );
+
+    const listed = await call(
+      appRouter.area.list,
+      { includeArchived: true },
+      { context: ctx(USER_B) },
+    );
+
+    expect(listed).toEqual([]);
+  });
+});
+
+describe("projects", () => {
+  it("hides another user's project", async () => {
+    const project = await call(
+      appRouter.project.create,
+      { areaId: null, name: "Paper", description: null, startDate: null, dueDate: null },
+      { context: ctx(USER_A) },
+    );
+
+    await expectNotFound(
+      call(appRouter.project.get, { id: project.id }, { context: ctx(USER_B) }),
+    );
+    await expectNotFound(
+      call(appRouter.project.update, { id: project.id, name: "Taken" }, { context: ctx(USER_B) }),
+    );
+  });
+
+  it("refuses to attach a project to someone else's area", async () => {
+    const area = await call(
+      appRouter.area.create,
+      { name: "Research", color: "indigo", icon: null },
+      { context: ctx(USER_A) },
+    );
+
+    // Would otherwise create an orphan pointing at another user's row.
+    await expectNotFound(
+      call(
+        appRouter.project.create,
+        {
+          areaId: area.id,
+          name: "Sneaky",
+          description: null,
+          startDate: null,
+          dueDate: null,
+        },
+        { context: ctx(USER_B) },
+      ),
+    );
+  });
+});
+
+describe("tasks", () => {
+  it("hides another user's task from every mutation", async () => {
+    const task = await call(
+      appRouter.task.create,
+      { title: "Rerun ablations" },
+      { context: ctx(USER_A) },
+    );
+
+    await expectNotFound(call(appRouter.task.get, { id: task.id }, { context: ctx(USER_B) }));
+    await expectNotFound(
+      call(appRouter.task.update, { id: task.id, title: "Taken" }, { context: ctx(USER_B) }),
+    );
+    await expectNotFound(
+      call(appRouter.task.setComplete, { id: task.id, complete: true }, { context: ctx(USER_B) }),
+    );
+    await expectNotFound(
+      call(appRouter.task.schedule, { id: task.id, scheduledFor: null }, { context: ctx(USER_B) }),
+    );
+    await expectNotFound(call(appRouter.task.remove, { id: task.id }, { context: ctx(USER_B) }));
+
+    // Still intact for its owner.
+    await expect(
+      call(appRouter.task.get, { id: task.id }, { context: ctx(USER_A) }),
+    ).resolves.toMatchObject({ title: "Rerun ablations", status: "todo" });
+  });
+
+  it("does not leak another user's tasks through list filters", async () => {
+    await call(appRouter.task.create, { title: "Private" }, { context: ctx(USER_A) });
+
+    const page = await call(
+      appRouter.task.list,
+      { filters: { search: "Private" }, page: {} },
+      { context: ctx(USER_B) },
+    );
+
+    expect(page.items).toEqual([]);
+  });
+
+  it("ignores tag ids belonging to another user", async () => {
+    const task = await call(appRouter.task.create, { title: "Mine" }, { context: ctx(USER_A) });
+    const foreignTag = await call(
+      appRouter.tag.create,
+      { name: "theirs", color: "rose" },
+      { context: ctx(USER_B) },
+    );
+
+    const updated = await call(
+      appRouter.task.setTags,
+      { id: task.id, tagIds: [foreignTag.id] },
+      { context: ctx(USER_A) },
+    );
+
+    expect(updated.tagIds).toEqual([]);
+  });
+});
+
+describe("sessions", () => {
+  it("hides another user's session", async () => {
+    const task = await call(appRouter.task.create, { title: "Work" }, { context: ctx(USER_A) });
+    const session = await call(
+      appRouter.session.start,
+      { taskId: task.id, source: "timer" },
+      { context: ctx(USER_A) },
+    );
+
+    await expectNotFound(
+      call(appRouter.session.stop, { id: session.id }, { context: ctx(USER_B) }),
+    );
+    await expectNotFound(
+      call(appRouter.session.remove, { id: session.id }, { context: ctx(USER_B) }),
+    );
+
+    // B's own running session is unaffected by A's.
+    const running = await call(appRouter.session.running, undefined, { context: ctx(USER_B) });
+    expect(running.session).toBeNull();
+  });
+
+  it("refuses to start a session against someone else's task", async () => {
+    const task = await call(appRouter.task.create, { title: "Private" }, { context: ctx(USER_A) });
+
+    await expectNotFound(
+      call(appRouter.session.start, { taskId: task.id, source: "timer" }, { context: ctx(USER_B) }),
+    );
+  });
+});
+
+describe("settings", () => {
+  it("gives each user their own row", async () => {
+    await call(appRouter.settings.update, { dailyCapacityMin: 480 }, { context: ctx(USER_A) });
+
+    const a = await call(appRouter.settings.get, undefined, { context: ctx(USER_A) });
+    const b = await call(appRouter.settings.get, undefined, { context: ctx(USER_B) });
+
+    expect(a.dailyCapacityMin).toBe(480);
+    expect(b.dailyCapacityMin).toBe(360);
+    expect(b.userId).toBe(USER_B);
+  });
+});
+
+describe("error shape", () => {
+  it("reports NOT_FOUND rather than FORBIDDEN, so existence is not confirmed", async () => {
+    const task = await call(appRouter.task.create, { title: "Secret" }, { context: ctx(USER_A) });
+
+    const missingId = "00000000-0000-4000-8000-0000000000ff";
+
+    const foreign = await call(appRouter.task.get, { id: task.id }, { context: ctx(USER_B) }).catch(
+      (e: unknown) => e,
+    );
+    const missing = await call(appRouter.task.get, { id: missingId }, { context: ctx(USER_B) }).catch(
+      (e: unknown) => e,
+    );
+
+    // A row that exists but isn't yours must be indistinguishable from one
+    // that doesn't exist at all.
+    expect(isDefinedError(foreign) || foreign instanceof ORPCError).toBe(true);
+    expect((foreign as ORPCError<string, unknown>).code).toBe(
+      (missing as ORPCError<string, unknown>).code,
+    );
+    expect((foreign as ORPCError<string, unknown>).message).toBe(
+      (missing as ORPCError<string, unknown>).message,
+    );
+  });
+});
