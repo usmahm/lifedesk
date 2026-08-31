@@ -428,7 +428,7 @@ The rest are pure UI against procedures that already exist, so they get built on
 - [ ] **Manual session entry and editing** — `session.create` and `session.update` exist with **0 web call sites**; only `RunawayBanner` calls `update`. A forgotten timer can be corrected, but a session you never started cannot be added. Highest value of the five: the plan calls this "not optional polish — you will forget to stop the timer"
 - [ ] **Project detail** — no `/projects/[id]`; `project.get` exists, **0 call sites**. Projects are created and listed from the area page but cannot be opened, which is a dead end you hit constantly
 - [ ] **Tags UI** — `tag.list`, `tag.create` and `task.addTag` are complete end-to-end and called from nowhere
-- [ ] **PWA raster icons** — 192/512 PNG; only `icon.svg` ships
+- [x] **PWA raster icons** — real icon set in place: `app/favicon.ico` and `app/apple-icon.png` via Next's file conventions, `public/icon-192.png` and `icon-512.png` for the manifest. The placeholder `icon.svg` was removed rather than kept — browsers prefer SVG, so it would have won over the real artwork in the tab
 - [ ] **Day intention line** — designed in §4.7. Needs a `DayPlan`/intention field first, so it is the largest of the five, not the smallest
 
 ### Phase 1.5 — time blocking and timelines _(shipped)_
