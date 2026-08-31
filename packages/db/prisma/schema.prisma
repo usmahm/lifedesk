@@ -153,6 +153,26 @@ model Account {
   @@map("auth_account")
 }
 
+/// Counters for Better Auth's rate limiter, keyed `<ip>|<path>`.
+///
+/// Stored here rather than in memory because the default `Map` lives inside a
+/// single serverless instance: Vercel runs several at once and recycles them,
+/// so "3 sign-ins per 10s" would become 3 x (warm instances) and reset on every
+/// cold start — loosening exactly when someone is hammering hard enough to
+/// spin more up.
+///
+/// Must be named `RateLimit`; the Prisma adapter looks for `prisma.rateLimit`.
+model RateLimit {
+  id  String @id @default(uuid())
+  key String @unique
+
+  count Int
+  /// Epoch milliseconds. Better Auth declares this as a bigint.
+  lastRequest BigInt
+
+  @@map("rate_limit")
+}
+
 model Verification {
   id         String   @id @default(uuid())
   identifier String

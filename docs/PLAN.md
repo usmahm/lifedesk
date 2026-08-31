@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-08-31 (Phase 2 steps 16–18 — Neon Postgres, real auth)
+> Last updated: 2026-08-31 (**Phase 2 complete** — Neon Postgres, real auth, ready to deploy)
 
 ---
 
@@ -269,7 +269,9 @@ Versions verified against npm on 2026-08-30. **Pin these exactly.**
 
 **Why Prisma 7.10.0 and not 8.** npm's `latest` tag currently points at `prisma@8.0.0-rc.12` — a release candidate — and `@prisma/adapter-neon` has no 8.x stable at all. Pin 7.10.0 across `prisma`, `@prisma/client`, and the adapter.
 
-Prisma 7 has real breaking changes we design around: the `prisma-client` generator with a mandatory `output` path, mandatory driver adapters, `prisma.config.ts`, ESM-first output, `$use()` middleware removed. There is a [known open issue](https://github.com/prisma/prisma/issues/28627) where the generated client's ESM `.js` specifiers break bundlers. **Our layout avoids it**: the generated client lives inside `packages/db`, a Node-only workspace package listed in Next's `serverExternalPackages`, so Turbopack never tries to bundle it. Escape hatch if it still bites: `moduleFormat = "cjs"`.
+Prisma 7 has real breaking changes we design around: the `prisma-client` generator with a mandatory `output` path, mandatory driver adapters, `prisma.config.ts`, ESM-first output, `$use()` middleware removed. Two further ones surfaced in practice: `url`/`directUrl` are no longer allowed in `schema.prisma`, and `migrate dev` no longer regenerates the client — hence the `postinstall`.
+
+**The `serverExternalPackages` note that used to be here was wrong**, and is corrected in `apps/web/next.config.ts`. Externalising tells Node to require the package at runtime, and `@lifedesk/db` exports raw TypeScript that Node cannot load. [Issue #28627](https://github.com/prisma/prisma/issues/28627) does not apply either: 7.10.0 emits extensionless imports, and Turbopack transpiles the package transitively through `@lifedesk/api`. Verified by running the production build.
 
 ### 6.2 Security model
 
@@ -401,12 +403,12 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 
 **Known gaps, deliberately carried past the backend swap** → Phase 2.5. In every case the API is finished and only the UI is missing, so nothing here blocks Phase 2.
 
-### Phase 2 — real backend _(no frontend changes)_
+### Phase 2 — real backend _(complete)_
 
 - [x] 16. `packages/db` — Prisma 7 schema, `prisma.config.ts`, Neon adapter, generator output inside the package, initial migration, seed
 - [x] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
 - [x] 18. Better Auth replacing the stub — **email+password only**; Google deferred until it's wanted. Onboarding seeds settings and five default areas inside the user-create hook
-- [ ] 19. Rate limiting, error monitoring, deploy
+- [x] 19. Rate limiting (Postgres-backed, `/api/auth/*` only), error logging to Vercel's runtime logs, deploy prep — see `docs/DEPLOY.md`
 
 **Running the demo fixtures.** Since real auth landed, the seed attaches its data to an account that already exists rather than inventing one — a user row with no credential record is one nobody can sign in as. Sign up in the app, then:
 
@@ -418,7 +420,7 @@ SEED_EMAIL=you@example.com pnpm --filter @lifedesk/db seed
 
 Deferred until the real backend is in. Two reasons, and they are the point rather than an excuse:
 
-1. **It protects the Phase 2 test.** The measure of a clean swap is `git diff --stat apps/web` being ~empty across the backend commits. Building new screens *during* the swap would make that number meaningless. Swap first, verify the diff, then build.
+1. **It protects the Phase 2 test.** The measure of a clean swap is `git diff --stat apps/web` being ~empty across the backend commits. Building new screens _during_ the swap would make that number meaningless. Swap first, verify the diff, then build.
 2. **One of them needs a schema change anyway.** The intention line has no field in `packages/contracts`, so doing it after Prisma means adding a column once rather than adding it to the memory repos and migrating it a week later.
 
 The rest are pure UI against procedures that already exist, so they get built once, directly against the real database.

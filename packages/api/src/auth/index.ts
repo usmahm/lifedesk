@@ -20,11 +20,31 @@ import { DEFAULT_ONBOARDING_AREAS } from "./onboarding";
  * It lives here rather than in the app because it needs the Prisma client, and
  * this is the only package allowed to touch it. See .claude/rules/data-access.md.
  */
+/**
+ * The origin Better Auth builds callbacks and cookies against.
+ *
+ * Deliberately throws in production rather than falling back. A wrong baseURL
+ * produces no error at all — it surfaces days later as sign-in mysteriously
+ * failing, because cookies were scoped to a host nobody is visiting.
+ */
+function resolveBaseUrl(): string {
+  const configured = process.env.BETTER_AUTH_URL;
+  if (configured) return configured;
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "BETTER_AUTH_URL must be set in production — it is the origin cookies and " +
+        "callbacks are built against. See docs/DEPLOY.md.",
+    );
+  }
+  return "http://localhost:3000";
+}
+
 export function createAuth(options?: { plugins?: BetterAuthOptions["plugins"] }) {
   return betterAuth({
     database: prismaAdapter(prisma, { provider: "postgresql" }),
 
-    baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+    baseURL: resolveBaseUrl(),
 
     emailAndPassword: {
       enabled: true,
@@ -69,6 +89,38 @@ export function createAuth(options?: { plugins?: BetterAuthOptions["plugins"] })
             ]);
           },
         },
+      },
+    },
+
+    /**
+     * Counters live in Postgres, not memory — see the RateLimit model for why
+     * the default `Map` is useless on serverless.
+     *
+     * `enabled` is forced on; Better Auth only enables it in production by
+     * default, which means the one thing you want to test is the one thing
+     * that never runs locally.
+     *
+     * The defaults do the rest: /sign-in*, /sign-up*, /change-password* and
+     * /change-email* are capped at 3 per 10s per IP, password-reset paths at
+     * 3 per 60s. Over the cap is a 429 with X-Retry-After. Note the window
+     * resets from the *last* request, not the first, so hammering keeps it
+     * alive — you have to go quiet to get back in.
+     */
+    rateLimit: {
+      enabled: true,
+      storage: "database",
+    },
+
+    advanced: {
+      ipAddress: {
+        /**
+         * Not optional behind a proxy. Better Auth warns that when it cannot
+         * resolve a client IP it "falls back to a single shared per-path
+         * bucket" — one counter for every user on earth. On Vercel the real
+         * address only arrives in x-forwarded-for, so without this the limiter
+         * degrades silently, and in the wrong direction.
+         */
+        ipAddressHeaders: ["x-forwarded-for"],
       },
     },
 
