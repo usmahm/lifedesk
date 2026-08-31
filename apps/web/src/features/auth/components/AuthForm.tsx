@@ -6,6 +6,7 @@ import { Label } from "@lifedesk/ui/components/label";
 import Link from "next/link";
 import { useActionState } from "react";
 
+import { If } from "@/components/If";
 import type { AuthFormState } from "@/lib/auth/actions";
 
 /**
@@ -38,12 +39,12 @@ export function AuthForm({
       </div>
 
       <form action={formAction} className="space-y-4">
-        {isSignUp && (
+        <If condition={isSignUp}>
           <div className="space-y-1.5">
             <Label htmlFor="name">Name</Label>
             <Input id="name" name="name" autoComplete="name" required className="h-11" />
           </div>
-        )}
+        </If>
 
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
@@ -70,11 +71,11 @@ export function AuthForm({
           />
         </div>
 
-        {state.error && (
-          <p role="alert" className="text-destructive text-sm">
+        <If condition={state.error !== null}>
+          <p role="alert" className="text-sm text-destructive">
             {state.error}
           </p>
-        )}
+        </If>
 
         {/* Only the button is disabled while pending — never the whole form. */}
         <Button type="submit" className="h-11 w-full" disabled={isPending}>
@@ -82,7 +83,7 @@ export function AuthForm({
         </Button>
       </form>
 
-      <p className="text-muted-foreground mt-6 text-sm">
+      <p className="mt-6 text-sm text-muted-foreground">
         {isSignUp ? "Already have an account? " : "No account yet? "}
         <Link
           href={isSignUp ? "/sign-in" : "/sign-up"}
@@ -92,7 +93,7 @@ export function AuthForm({
         </Link>
       </p>
 
-      <p className="text-muted-foreground mt-8 text-xs">
+      <p className="mt-8 text-xs text-muted-foreground">
         Phase 1 preview — any email and an 8-character password will get you in.
       </p>
     </div>

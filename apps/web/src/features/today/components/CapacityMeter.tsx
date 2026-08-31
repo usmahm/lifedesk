@@ -6,6 +6,7 @@ import { formatDurationMinutes } from "@lifedesk/core/time";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { cn } from "@lifedesk/ui/lib/utils";
 
+import { If } from "@/components/If";
 import { useCapacityForDay } from "@/features/tasks/hooks/useTasks";
 
 /**
@@ -55,7 +56,7 @@ export function CapacityMeter({
   return (
     <div className="space-y-1.5">
       <div
-        className="bg-muted h-1 w-full overflow-hidden rounded-full"
+        className="h-1 w-full overflow-hidden rounded-full bg-muted"
         role="meter"
         aria-valuenow={plannedMin}
         aria-valuemin={0}
@@ -74,18 +75,18 @@ export function CapacityMeter({
       <p className={cn("text-xs tabular-nums", isOver ? "text-warning" : "text-muted-foreground")}>
         {formatDurationMinutes(plannedMin)} planned of {formatDurationMinutes(capacityMin)}
         {isOver && " · over"}
-        {blockedMin > 0 && (
+        <If condition={blockedMin > 0}>
           <span className="text-muted-foreground">
             {" · "}
             {formatDurationMinutes(blockedMin)} blocked
           </span>
-        )}
-        {unestimatedCount > 0 && (
+        </If>
+        <If condition={unestimatedCount > 0}>
           <span className="text-muted-foreground">
             {" · "}
             {unestimatedCount} without an estimate
           </span>
-        )}
+        </If>
       </p>
     </div>
   );

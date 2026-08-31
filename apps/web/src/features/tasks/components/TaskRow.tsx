@@ -9,6 +9,7 @@ import { cn } from "@lifedesk/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
 
+import { If } from "@/components/If";
 import { useRunningSession } from "@/features/timer/hooks/useRunningSession";
 import { useStartTimer } from "@/features/timer/hooks/useTimerControls";
 import { orpc } from "@/lib/orpc/client";
@@ -45,7 +46,7 @@ export function TaskRow({
   return (
     <div
       className={cn(
-        "group hover:bg-accent/40 relative flex h-12 items-center gap-3 rounded-md px-2 transition-colors duration-150",
+        "group relative flex h-12 items-center gap-3 rounded-md px-2 transition-colors duration-150 hover:bg-accent/40",
         isDone && "opacity-60",
       )}
     >
@@ -60,12 +61,12 @@ export function TaskRow({
       <button
         type="button"
         onClick={() => onOpen?.(task)}
-        className="focus-visible:ring-ring min-w-0 flex-1 rounded-sm text-left focus-visible:ring-2 focus-visible:outline-none"
+        className="min-w-0 flex-1 rounded-sm text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <span className={cn("block truncate text-sm", isDone && "line-through")}>{task.title}</span>
 
         {(area || project) && (
-          <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
+          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
             {area && <AreaDot color={area.color} />}
             <span className="truncate">
               {area?.name}
@@ -76,19 +77,19 @@ export function TaskRow({
         )}
       </button>
 
-      {task.trackedSec > 0 && (
-        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+      <If condition={task.trackedSec > 0}>
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
           {formatDuration(task.trackedSec)}
         </span>
-      )}
+      </If>
 
       {task.estimateMin !== null && (
-        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
           {formatDurationMinutes(task.estimateMin)}
         </span>
       )}
 
-      {!isDone && (
+      <If condition={!isDone}>
         <Button
           variant="ghost"
           size="icon"
@@ -104,7 +105,7 @@ export function TaskRow({
         >
           <Play className={cn("size-3.5", isRunning && "fill-current")} />
         </Button>
-      )}
+      </If>
     </div>
   );
 }

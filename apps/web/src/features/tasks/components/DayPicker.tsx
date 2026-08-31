@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@lifedesk/ui/components
 import { Separator } from "@lifedesk/ui/components/separator";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
+import { If } from "@/components/If";
 
 /**
  * Move a task to a day.
@@ -54,7 +55,12 @@ export function DayPicker({
         {today && (
           <>
             <div className="flex flex-col p-1">
-              <Button variant="ghost" size="sm" className="justify-start" onClick={() => pick(today)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="justify-start"
+                onClick={() => pick(today)}
+              >
                 Today
               </Button>
               <Button
@@ -65,16 +71,16 @@ export function DayPicker({
               >
                 Tomorrow
               </Button>
-              {value && (
+              <If condition={value !== null}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground justify-start"
+                  className="justify-start text-muted-foreground"
                   onClick={() => pick(null)}
                 >
                   Move to inbox
                 </Button>
-              )}
+              </If>
             </div>
             <Separator />
           </>

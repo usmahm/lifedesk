@@ -1,5 +1,6 @@
 import nextPlugin from "@next/eslint-plugin-next";
 
+import { DATE_RESTRICTIONS } from "./base.js";
 import { reactConfig } from "./react.js";
 
 /**
@@ -22,6 +23,21 @@ export const nextConfig = [
   },
   {
     rules: {
+      // Spreads the date rules back in — flat config replaces a rule wholesale,
+      // so omitting them here would quietly switch off the `new Date()` ban.
+      "no-restricted-syntax": [
+        "error",
+        ...DATE_RESTRICTIONS,
+        {
+          // <If> cannot short-circuit: its children are evaluated as arguments
+          // before it runs. A `!` inside therefore typechecks and then crashes
+          // — the one hole the strict `boolean` prop can't close.
+          selector: 'JSXElement[openingElement.name.name="If"] TSNonNullExpression',
+          message:
+            "A `!` assertion inside <If> is still evaluated — <If> does not short-circuit. Use `{value && …}` or a ternary so TypeScript narrows the value instead.",
+        },
+      ],
+
       "no-restricted-imports": [
         "error",
         {

@@ -9,6 +9,7 @@ import type { CSSProperties } from "react";
 
 import { MIN_BLOCK_PX } from "../constants";
 import type { GridItem } from "../types";
+import { If } from "@/components/If";
 
 /**
  * One block on the grid.
@@ -53,10 +54,10 @@ export function ScheduleBlock({
       style={style}
       title={`${item.title} · ${timeLabel}`}
       className={cn(
-        "schedule-block focus-visible:ring-ring absolute overflow-hidden rounded-md px-1.5 py-1 text-left transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none",
+        "schedule-block absolute overflow-hidden rounded-md px-1.5 py-1 text-left transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         item.isDone && "opacity-55",
         // The running session is the one thing allowed to use --focus.
-        item.isRunning && "ring-focus ring-2",
+        item.isRunning && "ring-2 ring-focus",
       )}
     >
       <span
@@ -68,12 +69,12 @@ export function ScheduleBlock({
         {item.title}
       </span>
 
-      {!isShort && (
-        <span className="text-muted-foreground block truncate text-[10px] tabular-nums">
+      <If condition={!isShort}>
+        <span className="block truncate text-[10px] text-muted-foreground tabular-nums">
           {timeLabel}
           {item.subtitle && ` · ${item.subtitle}`}
         </span>
-      )}
+      </If>
     </button>
   );
 }

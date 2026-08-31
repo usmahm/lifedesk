@@ -1,12 +1,7 @@
 "use client";
 
 import type { CalendarDay } from "@lifedesk/contracts";
-import {
-  addDays,
-  formatDay,
-  formatDayRelative,
-  formatDuration,
-} from "@lifedesk/core/time";
+import { addDays, formatDay, formatDayRelative, formatDuration } from "@lifedesk/core/time";
 import { Button } from "@lifedesk/ui/components/button";
 import { AreaDot } from "@lifedesk/ui/components/domain/area-dot";
 import { EmptyState } from "@lifedesk/ui/components/domain/empty-state";
@@ -15,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
+import { If } from "@/components/If";
 import { ErrorState } from "@/components/ErrorState";
 import { DayGrid, sessionsToGridItems, useNowMinute } from "@/features/schedule";
 import { useToday } from "@/features/settings/hooks/useToday";
@@ -90,7 +86,7 @@ export function SessionsView() {
       <header className="space-y-4">
         <div>
           <h1 className="font-serif text-3xl leading-tight md:text-4xl">Sessions</h1>
-          <p className="text-muted-foreground mt-2 text-sm">Where the hours actually went.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Where the hours actually went.</p>
         </div>
 
         {/* The runaway guard stays visible from any day — burying a forgotten
@@ -105,7 +101,7 @@ export function SessionsView() {
               <p className="text-base font-medium">
                 {formatDayRelative(activeDay, today.data.day)}
               </p>
-              <p className="text-muted-foreground text-xs">{formatDay(activeDay, "d MMMM yyyy")}</p>
+              <p className="text-xs text-muted-foreground">{formatDay(activeDay, "d MMMM yyyy")}</p>
             </div>
           )}
 
@@ -119,11 +115,11 @@ export function SessionsView() {
             >
               <ChevronLeft className="size-4" />
             </Button>
-            {activeDay !== today.data?.day && (
+            <If condition={activeDay !== today.data?.day}>
               <Button variant="ghost" size="sm" onClick={() => setDay(null)}>
                 Today
               </Button>
-            )}
+            </If>
             <Button
               variant="ghost"
               size="icon"
@@ -164,7 +160,7 @@ export function SessionsView() {
                 return (
                   <span
                     key={areaId ?? "none"}
-                    className="text-muted-foreground flex items-center gap-1.5 text-xs"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground"
                   >
                     {area && <AreaDot color={area.color} label={area.name} />}
                     {area?.name ?? "No area"}
@@ -180,11 +176,7 @@ export function SessionsView() {
             today={today.data?.day}
           />
 
-          <SessionList
-            sessions={items}
-            timezone={timezone}
-            titleFor={titleFor}
-          />
+          <SessionList sessions={items} timezone={timezone} titleFor={titleFor} />
         </>
       )}
     </div>

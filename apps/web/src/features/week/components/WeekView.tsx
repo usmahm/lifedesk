@@ -16,6 +16,7 @@ import { cn } from "@lifedesk/ui/lib/utils";
 import { CalendarRange, ChevronLeft, ChevronRight, Rows3 } from "lucide-react";
 import { useState } from "react";
 
+import { If } from "@/components/If";
 import { ErrorState } from "@/components/ErrorState";
 import { useToday } from "@/features/settings/hooks/useToday";
 import { TaskDetailSheet } from "@/features/tasks/components/TaskDetailSheet";
@@ -45,11 +46,7 @@ export function WeekView() {
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
   const activeDay = selectedDay ?? today.data?.day ?? days[0];
 
-  const tasks = useTasks(
-    days.length > 0
-      ? { scheduledFrom: days[0], scheduledTo: days[6] }
-      : {},
-  );
+  const tasks = useTasks(days.length > 0 ? { scheduledFrom: days[0], scheduledTo: days[6] } : {});
 
   if (today.isError) {
     return (
@@ -85,7 +82,7 @@ export function WeekView() {
         )}
 
         <div className="flex items-center gap-1">
-          <div className="bg-muted mr-1 flex rounded-md p-0.5" role="group" aria-label="Week view">
+          <div className="mr-1 flex rounded-md bg-muted p-0.5" role="group" aria-label="Week view">
             <Button
               variant={mode === "list" ? "secondary" : "ghost"}
               size="sm"
@@ -116,11 +113,11 @@ export function WeekView() {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          {weekOffset !== 0 && (
+          <If condition={weekOffset !== 0}>
             <Button variant="ghost" size="sm" onClick={() => setWeekOffset(0)}>
               This week
             </Button>
-          )}
+          </If>
           <Button
             variant="ghost"
             size="icon"
@@ -164,7 +161,7 @@ export function WeekView() {
                     aria-current={isActive ? "date" : undefined}
                     className={cn(
                       "flex h-14 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md text-xs transition-colors duration-150",
-                      "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-accent",
@@ -228,7 +225,7 @@ function DayColumn({
 }) {
   return (
     <section className="min-w-0">
-      {showHeading && (
+      <If condition={showHeading}>
         <h2
           className={cn(
             "mb-1 px-2 text-xs font-medium tracking-wide uppercase",
@@ -237,14 +234,14 @@ function DayColumn({
         >
           {formatDayShort(day)}
         </h2>
-      )}
+      </If>
 
       {isPending ? (
         <Skeleton className="mx-2 h-10" />
       ) : tasks.length === 0 ? (
         // An empty day is a normal, good state — it should read as space,
         // not as an error.
-        <p className="text-muted-foreground/60 px-2 py-2 text-xs">Nothing planned</p>
+        <p className="px-2 py-2 text-xs text-muted-foreground/60">Nothing planned</p>
       ) : (
         <ul className="-mx-2">
           {tasks.map((task) => (

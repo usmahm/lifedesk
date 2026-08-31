@@ -4,14 +4,14 @@ Building components, using shadcn, and getting responsive right. Visual tokens a
 
 ## Where a component goes
 
-| It is… | Put it in |
-|---|---|
-| A generic primitive with no LifeDesk knowledge (Button, Sheet, Popover) | `packages/ui` |
-| Used by two or more features, still domain-aware (`AreaDot`, `DurationChip`) | `packages/ui/src/components/domain/` |
-| Used by exactly one feature | `apps/web/src/features/<feature>/components/` |
-| App shell — rail, tab bar, timer bar | `apps/web/src/components/layout/` |
+| It is…                                                                       | Put it in                                     |
+| ---------------------------------------------------------------------------- | --------------------------------------------- |
+| A generic primitive with no LifeDesk knowledge (Button, Sheet, Popover)      | `packages/ui`                                 |
+| Used by two or more features, still domain-aware (`AreaDot`, `DurationChip`) | `packages/ui/src/components/domain/`          |
+| Used by exactly one feature                                                  | `apps/web/src/features/<feature>/components/` |
+| App shell — rail, tab bar, timer bar                                         | `apps/web/src/components/layout/`             |
 
-**Start it in the feature.** Promote to `packages/ui` on the *second* real use, not in anticipation of one. A shared component with one caller is a guess, and it usually guesses wrong about the API.
+**Start it in the feature.** Promote to `packages/ui` on the _second_ real use, not in anticipation of one. A shared component with one caller is a guess, and it usually guesses wrong about the API.
 
 ## shadcn
 
@@ -55,11 +55,11 @@ page.tsx              server — prefetches via the server-side oRPC client
 
 Breakpoints (`docs/PLAN.md` §4.2):
 
-| Width | Layout |
-|---|---|
-| `<768px` | Bottom tab bar; rail in a drawer; detail as a full-height sheet; timer bar above the tabs |
-| `768–1023px` | Rail collapses to a 64px icon strip; detail as a sheet |
-| `≥1024px` | 240px rail · 720px content column · 320px detail panel |
+| Width        | Layout                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| `<768px`     | Bottom tab bar; rail in a drawer; detail as a full-height sheet; timer bar above the tabs |
+| `768–1023px` | Rail collapses to a 64px icon strip; detail as a sheet                                    |
+| `≥1024px`    | 240px rail · 720px content column · 320px detail panel                                    |
 
 Write mobile-first: unprefixed classes are the phone, `md:` and `lg:` add to them.
 
@@ -67,7 +67,7 @@ Write mobile-first: unprefixed classes are the phone, `md:` and `lg:` add to the
 <div className="px-4 md:px-6 lg:grid lg:grid-cols-[240px_1fr]">
 ```
 
-**Some layouts need a different structure, not different classes.** Week view is seven columns on desktop and a *vertical agenda with a day-strip selector* on mobile — seven columns on a phone is unreadable. When the structure genuinely differs, render two components and switch on a `useMediaQuery` hook; don't torture one tree with a dozen breakpoint classes.
+**Some layouts need a different structure, not different classes.** Week view is seven columns on desktop and a _vertical agenda with a day-strip selector_ on mobile — seven columns on a phone is unreadable. When the structure genuinely differs, render two components and switch on a `useMediaQuery` hook; don't torture one tree with a dozen breakpoint classes.
 
 Always check: 390px (phone), 768px (tablet), 1440px (desktop).
 
@@ -87,6 +87,42 @@ Write all four when you write the list, not as a follow-up:
 4. **Loaded**
 
 Empty copy is specific and calm: "Nothing scheduled for today." + `Add a task` — not "No items found."
+
+## Conditional rendering
+
+Three tools, and the compiler tells you which one you're allowed to use.
+
+**`<If condition={…}>`** (`apps/web/src/components/If.tsx`) for a boolean guard — where the condition is a predicate and the children don't depend on it being true:
+
+```tsx
+<If condition={weekOffset !== 0}>
+  <Button onClick={() => setWeekOffset(0)}>This week</Button>
+</If>
+```
+
+**`{value && …}`** where the condition is doing _narrowing_ work:
+
+```tsx
+<>
+  {area && <AreaDot color={area.color} />}
+  {nowMinute !== null && <NowLine offsetPct={minuteToOffsetPct(nowMinute, window)} />}
+</>
+```
+
+**A ternary or an early return** for a genuine either/or. `<If>` has no `else`, and writing the condition twice — once negated — is two sources of truth that drift.
+
+### Why you can't get this wrong
+
+`condition` is typed as strict `boolean`, never truthy. Two facts make that load-bearing: JSX children are evaluated as arguments _before_ `<If>` runs, so it cannot short-circuit them; and TypeScript cannot narrow across a component boundary. The strict type turns both into compile errors:
+
+```tsx
+<If condition={area}>            // ✗ 'Area | undefined' is not 'boolean'
+<If condition={Boolean(area)}>   // ✓ — but `area.color` inside still errors
+```
+
+So if a conversion to `<If>` fails to compile, that is the answer, not an obstacle: leave it as `&&` and add a one-line comment saying why.
+
+The single hole is a `!` assertion inside an `<If>` — it typechecks and then crashes. An ESLint rule in `tooling/eslint-config/next.js` catches it.
 
 ## Forms
 

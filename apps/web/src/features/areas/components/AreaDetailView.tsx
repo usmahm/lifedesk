@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { If } from "@/components/If";
 import { ErrorState } from "@/components/ErrorState";
 import { QuickAdd } from "@/features/tasks/components/QuickAdd";
 import { TaskDetailSheet } from "@/features/tasks/components/TaskDetailSheet";
@@ -81,13 +82,13 @@ export function AreaDetailView({ areaId }: { areaId: string }) {
       </header>
 
       <section className="space-y-3">
-        <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Projects
         </h2>
 
         <form onSubmit={handleCreateProject} className="relative">
           <Plus
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <Input
@@ -102,28 +103,25 @@ export function AreaDetailView({ areaId }: { areaId: string }) {
         {projects.isPending ? (
           <Skeleton className="h-10" />
         ) : projects.data && projects.data.length > 0 ? (
-          <ul className="divide-border divide-y">
+          <ul className="divide-y divide-border">
             {projects.data.map((project) => (
-              <li
-                key={project.id}
-                className="flex h-11 items-center gap-3 text-sm"
-              >
+              <li key={project.id} className="flex h-11 items-center gap-3 text-sm">
                 <span className="flex-1 truncate">{project.name}</span>
-                {project.status !== "active" && (
-                  <span className="text-muted-foreground text-xs">{project.status}</span>
-                )}
+                <If condition={project.status !== "active"}>
+                  <span className="text-xs text-muted-foreground">{project.status}</span>
+                </If>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-muted-foreground py-2 text-sm">No projects in this area yet.</p>
+          <p className="py-2 text-sm text-muted-foreground">No projects in this area yet.</p>
         )}
       </section>
 
       <Separator />
 
       <section className="space-y-3">
-        <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Open tasks
         </h2>
 

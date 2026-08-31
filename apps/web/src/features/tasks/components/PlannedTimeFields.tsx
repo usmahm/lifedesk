@@ -9,6 +9,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 import { useSetTaskPlannedTime } from "../hooks/useTaskMutations";
+import { If } from "@/components/If";
 
 /**
  * Blocking a task into a time range.
@@ -36,7 +37,8 @@ export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
   function commit(nextStart: string, nextEnd: string): void {
     if (nextStart === "" && nextEnd === "") {
       setError(null);
-      if (isBlocked) setPlannedTime.mutate({ id: task.id, plannedStartMin: null, plannedEndMin: null });
+      if (isBlocked)
+        setPlannedTime.mutate({ id: task.id, plannedStartMin: null, plannedEndMin: null });
       return;
     }
 
@@ -71,17 +73,17 @@ export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Label htmlFor="task-planned-start">Planned time</Label>
-        {isBlocked && (
+        <If condition={isBlocked}>
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground h-auto px-1 py-0 text-xs"
+            className="h-auto px-1 py-0 text-xs text-muted-foreground"
             onClick={clear}
           >
             <X className="size-3" />
             Clear
           </Button>
-        )}
+        </If>
       </div>
 
       <div className="flex items-center gap-2">
@@ -96,7 +98,7 @@ export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
           onBlur={() => commit(start, end)}
           className="tabular-nums"
         />
-        <span className="text-muted-foreground text-sm">to</span>
+        <span className="text-sm text-muted-foreground">to</span>
         <Input
           value={end}
           disabled={!hasDay}
@@ -109,15 +111,15 @@ export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
         />
       </div>
 
-      {error && (
-        <p role="alert" className="text-destructive text-xs">
+      <If condition={error !== null}>
+        <p role="alert" className="text-xs text-destructive">
           {error}
         </p>
-      )}
+      </If>
 
-      {!hasDay && (
-        <p className="text-muted-foreground text-xs">Give it a day first to block time.</p>
-      )}
+      <If condition={!hasDay}>
+        <p className="text-xs text-muted-foreground">Give it a day first to block time.</p>
+      </If>
     </div>
   );
 }

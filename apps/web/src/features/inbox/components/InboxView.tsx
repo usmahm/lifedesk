@@ -4,6 +4,7 @@ import type { TaskWithMeta } from "@lifedesk/contracts";
 import { Button } from "@lifedesk/ui/components/button";
 import { useState } from "react";
 
+import { If } from "@/components/If";
 import { useToday } from "@/features/settings/hooks/useToday";
 import { QuickAdd } from "@/features/tasks/components/QuickAdd";
 import { TaskDetailSheet } from "@/features/tasks/components/TaskDetailSheet";
@@ -33,11 +34,9 @@ export function InboxView() {
     <div className="space-y-8">
       <header className="flex items-baseline justify-between gap-3">
         <h1 className="font-serif text-3xl leading-tight md:text-4xl">Inbox</h1>
-        {count > 0 && (
-          <span className="text-muted-foreground text-sm tabular-nums">
-            {count} waiting
-          </span>
-        )}
+        <If condition={count > 0}>
+          <span className="text-sm text-muted-foreground tabular-nums">{count} waiting</span>
+        </If>
       </header>
 
       <QuickAdd placeholder="Capture something" />
