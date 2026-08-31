@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-08-31 (time blocking)
+> Last updated: 2026-08-31 (Phase 2 steps 16–17 — running on Neon Postgres)
 
 ---
 
@@ -403,8 +403,8 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 
 ### Phase 2 — real backend _(no frontend changes)_
 
-- [ ] 16. `packages/db` — Prisma 7 schema, `prisma.config.ts`, Neon adapter, generator output inside the package, initial migration, seed
-- [ ] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
+- [x] 16. `packages/db` — Prisma 7 schema, `prisma.config.ts`, Neon adapter, generator output inside the package, initial migration, seed
+- [x] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
 - [ ] 18. Better Auth replacing the stub — email+password, Google, onboarding that seeds default areas and settings
 - [ ] 19. Rate limiting, error monitoring, deploy
 
