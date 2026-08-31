@@ -1,3 +1,4 @@
+import { asCalendarDay } from "@lifedesk/core/time";
 import { call, isDefinedError, ORPCError } from "@orpc/server";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -154,6 +155,60 @@ describe("tasks", () => {
     await expect(
       call(appRouter.task.get, { id: task.id }, { context: ctx(USER_A) }),
     ).resolves.toMatchObject({ title: "Rerun ablations", status: "todo" });
+  });
+
+  it("hides another user's task from time blocking", async () => {
+    const task = await call(
+      appRouter.task.create,
+      { title: "Mine", scheduledFor: asCalendarDay("2026-08-30") },
+      { context: ctx(USER_A) },
+    );
+
+    await expectNotFound(
+      call(
+        appRouter.task.setPlannedTime,
+        { id: task.id, plannedStartMin: 540, plannedEndMin: 720 },
+        { context: ctx(USER_B) },
+      ),
+    );
+  });
+
+  it("refuses to block a task that has no day to draw it on", async () => {
+    const task = await call(appRouter.task.create, { title: "Someday" }, { context: ctx(USER_A) });
+
+    await expect(
+      call(
+        appRouter.task.setPlannedTime,
+        { id: task.id, plannedStartMin: 540, plannedEndMin: 720 },
+        { context: ctx(USER_A) },
+      ),
+    ).rejects.toSatisfy((error: unknown) => {
+      expect((error as ORPCError<string, unknown>).code).toBe("BAD_REQUEST");
+      return true;
+    });
+  });
+
+  it("clears the block when the day is cleared, leaving no orphan", async () => {
+    const task = await call(
+      appRouter.task.create,
+      {
+        title: "Blocked",
+        scheduledFor: asCalendarDay("2026-08-30"),
+        plannedStartMin: 540,
+        plannedEndMin: 720,
+      },
+      { context: ctx(USER_A) },
+    );
+    expect(task.plannedStartMin).toBe(540);
+
+    const unscheduled = await call(
+      appRouter.task.schedule,
+      { id: task.id, scheduledFor: null },
+      { context: ctx(USER_A) },
+    );
+
+    expect(unscheduled.plannedStartMin).toBeNull();
+    expect(unscheduled.plannedEndMin).toBeNull();
   });
 
   it("does not leak another user's tasks through list filters", async () => {

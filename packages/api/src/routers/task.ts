@@ -3,10 +3,12 @@ import {
   createTaskInput,
   idSchema,
   listTasksInput,
+  setTaskPlannedTimeInput,
   setTaskTagsInput,
   updateTaskInput,
 } from "@lifedesk/contracts";
 import { summarizeCapacity } from "@lifedesk/core/capacity";
+import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 
 import { notFound, protectedProcedure } from "../orpc";
@@ -53,6 +55,35 @@ export const taskRouter = {
         id: input.id,
         scheduledFor: input.scheduledFor,
       });
+      return task ?? notFound("Task");
+    }),
+
+  /**
+   * Block a task into a time range on its scheduled day, or clear the block.
+   *
+   * Its own procedure rather than a plain update, so the grid has one clean
+   * target to invalidate and one clean target for an optimistic move later.
+   */
+  setPlannedTime: protectedProcedure
+    .input(setTaskPlannedTimeInput)
+    .handler(async ({ input, context }) => {
+      const existing = await context.repos.task.findById(context.userId, input.id);
+      if (!existing) notFound("Task");
+
+      // A block is a time *on a day*. Without a day there is nowhere to draw
+      // it, so refuse rather than storing something unreachable.
+      if (input.plannedStartMin !== null && existing.scheduledFor === null) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Give the task a day before blocking time for it.",
+        });
+      }
+
+      const task = await context.repos.task.update(context.userId, {
+        id: input.id,
+        plannedStartMin: input.plannedStartMin,
+        plannedEndMin: input.plannedEndMin,
+      });
+
       return task ?? notFound("Task");
     }),
 

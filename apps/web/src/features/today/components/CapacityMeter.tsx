@@ -1,6 +1,7 @@
 "use client";
 
-import type { CalendarDay } from "@lifedesk/contracts";
+import type { CalendarDay, TaskWithMeta } from "@lifedesk/contracts";
+import { coveredMinutes } from "@lifedesk/core/schedule";
 import { formatDurationMinutes } from "@lifedesk/core/time";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { cn } from "@lifedesk/ui/lib/utils";
@@ -16,7 +17,13 @@ import { useCapacityForDay } from "@/features/tasks/hooks/useTasks";
  * The arithmetic is done on the server — one of the design principles is that
  * time is shown, never calculated by the reader.
  */
-export function CapacityMeter({ day }: { day: CalendarDay | undefined }) {
+export function CapacityMeter({
+  day,
+  tasks,
+}: {
+  day: CalendarDay | undefined;
+  tasks?: TaskWithMeta[];
+}) {
   const capacity = useCapacityForDay(day);
 
   if (capacity.isPending) {
@@ -32,6 +39,18 @@ export function CapacityMeter({ day }: { day: CalendarDay | undefined }) {
   if (capacity.isError) return null;
 
   const { plannedMin, capacityMin, ratio, isOver, unestimatedCount } = capacity.data;
+
+  // Wall-clock time actually set aside. Overlapping blocks count once — two
+  // things booked into the same hour is still one hour of the day.
+  const blockedMin = coveredMinutes(
+    (tasks ?? [])
+      .filter((task) => task.plannedStartMin !== null && task.plannedEndMin !== null)
+      .map((task) => ({
+        id: task.id,
+        startMin: task.plannedStartMin!,
+        endMin: task.plannedEndMin!,
+      })),
+  );
 
   return (
     <div className="space-y-1.5">
@@ -55,6 +74,12 @@ export function CapacityMeter({ day }: { day: CalendarDay | undefined }) {
       <p className={cn("text-xs tabular-nums", isOver ? "text-warning" : "text-muted-foreground")}>
         {formatDurationMinutes(plannedMin)} planned of {formatDurationMinutes(capacityMin)}
         {isOver && " · over"}
+        {blockedMin > 0 && (
+          <span className="text-muted-foreground">
+            {" · "}
+            {formatDurationMinutes(blockedMin)} blocked
+          </span>
+        )}
         {unestimatedCount > 0 && (
           <span className="text-muted-foreground">
             {" · "}

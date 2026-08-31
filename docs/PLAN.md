@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-08-31
+> Last updated: 2026-08-31 (time blocking)
 
 ---
 
@@ -184,11 +184,11 @@ Dark mode is designed, not inverted — first-class, because evening work is mos
 
 ### 4.7 Screens (Phase 1)
 
-- **Today** — date + intention (serif), capacity meter, quick add, task list, session history collapsed at the bottom
-- **Week** — seven columns on desktop. **On mobile, a vertical agenda** with sticky day headers and a horizontal day-strip selector; seven columns on a phone is unreadable. Reschedule via date picker, not a drag
+- **Today** — date + intention (serif), capacity meter (planned · blocked), quick add, task list beside a **day timeline** of blocked work (tabs on mobile)
+- **Week** — `List | Timeline` toggle, list the default, choice remembered per viewer. Timeline is seven time-grid columns on desktop, one plus the day strip on mobile. List view: seven columns on desktop. **On mobile, a vertical agenda** with sticky day headers and a horizontal day-strip selector; seven columns on a phone is unreadable. Reschedule via date picker, not a drag
 - **Inbox** — unscheduled capture, with one-tap "schedule for today"
 - **Areas** → area detail → project detail
-- **Sessions** — list, manual entry, edit, runaway-flag review
+- **Sessions** — **day-scoped**: prev/next day navigation, that day's timeline of *tracked* time, day total and per-area breakdown, the day's session list. The runaway-review banner is global, not per-day — a forgotten timer must be visible from whatever day you're on
 - **Settings** — timezone, week start, daily capacity, theme
 - **Sign in / sign up** — built for real against the auth stub
 
@@ -353,7 +353,8 @@ Project        userId, areaId?, name, description, status,
                startDate?, dueDate?, color?, sortOrder, archivedAt
 Task           userId, projectId?, areaId?, parentTaskId?,      ← one level only
                title, notes(md), status, priority,
-               estimateMin?, dueDate?, scheduledFor?, completedAt?, sortOrder
+               estimateMin?, dueDate?, scheduledFor?, completedAt?, sortOrder,
+               plannedStartMin?, plannedEndMin?                  ← time block
 Tag            userId, name, color
 TaskTag        taskId, tagId
 TimeSession    userId, taskId?, projectId?, areaId?,
@@ -362,6 +363,7 @@ TimeSession    userId, taskId?, projectId?, areaId?,
 
 **Design points that matter:**
 
+- **Planned time is minutes from local midnight, not a timestamp.** A block means "09:00 wherever you are"; a UTC instant would drift when you travel or when the clocks change — the exact bug `CalendarDay` exists to prevent. Deliberately separate from `estimateMin`: an estimate is how long you think it takes, a block is when you set the time aside. Both null or both set; clearing the day clears the block; blocks never cross midnight.
 - **`areaId`/`projectId` denormalized onto `TimeSession`**, captured at session start. Move a task to another project later and last month's report doesn't silently rewrite itself.
 - **One running session per user** — Phase 2 enforces it with a partial unique index on `TimeSession(userId) WHERE endedAt IS NULL`, so the database guarantees it rather than the application hoping.
 - **All timestamps UTC**; date-only fields (`scheduledFor`, `dueDate`) stored as `date`. Every conversion goes through `packages/core/time` using the user's stored timezone. A planner that gets this wrong shows tasks on the wrong day after a flight, and it is miserable to retrofit.
@@ -407,6 +409,20 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 - [ ] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
 - [ ] 18. Better Auth replacing the stub — email+password, Google, onboarding that seeds default areas and settings
 - [ ] 19. Rate limiting, error monitoring, deploy
+
+### Phase 1.5 — time blocking and timelines *(shipped)*
+
+- [x] `plannedStartMin` / `plannedEndMin` on Task, `task.setPlannedTime`
+- [x] `packages/core/schedule` — lane packing for overlaps, visible-hour window
+- [x] Shared `DayGrid` — one column for Today, seven for Week, built to take a
+      second "actual" layer later
+- [x] Today: list + timeline, capacity shows blocked vs planned
+- [x] Week: List/Timeline toggle, persisted
+- [x] Sessions: day-scoped with a timeline of tracked time; runaway banner global
+- [x] Design rule amended — area colour may fill a **grid block** (never a list row)
+
+Deferred from this pass: sessions overlaid on the planned grid, recurring
+routine blocks, drag-and-drop, blocks crossing midnight.
 
 ### Phase 3 — the thing that teaches you
 

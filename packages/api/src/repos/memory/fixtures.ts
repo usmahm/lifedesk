@@ -157,6 +157,8 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     tags?: string[];
     due?: number;
     priority?: Task["priority"];
+    /** Planned block, as minutes from local midnight. */
+    block?: [startMin: number, endMin: number];
   };
 
   const taskSpecs: TaskSpec[] = [
@@ -164,6 +166,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "ablations",
       title: "Rerun ablations with the fixed seed",
+      block: [9 * 60, 12 * 60],
       area: "research",
       project: "paper",
       scheduled: 0,
@@ -177,6 +180,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "chen",
       title: "Read Chen et al. on sparse attention",
+      block: [10 * 60 + 30, 11 * 60 + 15],
       area: "research",
       project: "litreview",
       scheduled: 0,
@@ -186,6 +190,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "queue",
       title: "Draft the migration rollback plan",
+      block: [13 * 60, 14 * 60 + 30],
       area: "work",
       project: "migration",
       scheduled: 0,
@@ -210,7 +215,16 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
       estimate: 30,
       tags: ["shallow"],
     },
-    { key: "walk", title: "Walk", area: "health", scheduled: 0, estimate: 30 },
+    // Deliberately before the grid's 06:00 default, so the window has to
+    // expand to reach it.
+    {
+      key: "walk",
+      title: "Walk",
+      area: "health",
+      scheduled: 0,
+      estimate: 30,
+      block: [5 * 60 + 30, 6 * 60],
+    },
     // a task with no estimate — the capacity meter under-reports, on purpose
     { key: "notes", title: "Tidy up yesterday's notes", area: "admin", scheduled: 0 },
 
@@ -218,6 +232,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "related",
       title: "Draft the related work section",
+      block: [9 * 60, 12 * 60],
       area: "research",
       project: "paper",
       scheduled: 1,
@@ -239,6 +254,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "rust3",
       title: "Rust chapter 3 — ownership exercises",
+      block: [19 * 60, 20 * 60],
       area: "learning",
       project: "rust",
       scheduled: 3,
@@ -247,6 +263,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "table",
       title: "Regenerate table 3 and figure 2",
+      block: [14 * 60, 14 * 60 + 45],
       area: "research",
       project: "paper",
       scheduled: 4,
@@ -255,6 +272,7 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
     {
       key: "retro",
       title: "Migration retro with the platform team",
+      block: [15 * 60, 16 * 60],
       area: "work",
       project: "migration",
       scheduled: 4,
@@ -354,6 +372,8 @@ export function seedFixtures(db: MemoryDb, now: Date): void {
       estimateMin: spec.estimate ?? null,
       scheduledFor,
       dueDate: spec.due === undefined ? null : day(spec.due),
+      plannedStartMin: spec.block?.[0] ?? null,
+      plannedEndMin: spec.block?.[1] ?? null,
       completedAt: status === "done" ? instantAt(scheduledFor ?? today, "17:30", TZ) : null,
       sortOrder: index,
       createdAt: now,

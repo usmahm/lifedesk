@@ -13,7 +13,7 @@ import {
 import { Button } from "@lifedesk/ui/components/button";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { cn } from "@lifedesk/ui/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarRange, ChevronLeft, ChevronRight, Rows3 } from "lucide-react";
 import { useState } from "react";
 
 import { ErrorState } from "@/components/ErrorState";
@@ -21,6 +21,9 @@ import { useToday } from "@/features/settings/hooks/useToday";
 import { TaskDetailSheet } from "@/features/tasks/components/TaskDetailSheet";
 import { TaskRow } from "@/features/tasks/components/TaskRow";
 import { useTasks } from "@/features/tasks/hooks/useTasks";
+
+import { useWeekViewMode } from "../hooks/useWeekViewMode";
+import { WeekTimeline } from "./WeekTimeline";
 
 /**
  * The week.
@@ -33,6 +36,7 @@ export function WeekView() {
   const today = useToday();
   const [weekOffset, setWeekOffset] = useState(0);
   const [openTask, setOpenTask] = useState<TaskWithMeta | null>(null);
+  const [mode, setMode] = useWeekViewMode();
 
   const anchor =
     today.data && addDays(startOfWeek(today.data.day, today.data.weekStartsOn), weekOffset * 7);
@@ -81,6 +85,29 @@ export function WeekView() {
         )}
 
         <div className="flex items-center gap-1">
+          <div className="bg-muted mr-1 flex rounded-md p-0.5" role="group" aria-label="Week view">
+            <Button
+              variant={mode === "list" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 gap-1.5 px-2"
+              aria-pressed={mode === "list"}
+              onClick={() => setMode("list")}
+            >
+              <Rows3 className="size-3.5" />
+              <span className="sr-only sm:not-sr-only">List</span>
+            </Button>
+            <Button
+              variant={mode === "timeline" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 gap-1.5 px-2"
+              aria-pressed={mode === "timeline"}
+              onClick={() => setMode("timeline")}
+            >
+              <CalendarRange className="size-3.5" />
+              <span className="sr-only sm:not-sr-only">Timeline</span>
+            </Button>
+          </div>
+
           <Button
             variant="ghost"
             size="icon"
@@ -110,6 +137,15 @@ export function WeekView() {
           title="Couldn't load these tasks."
           detail={tasks.error.message}
           onRetry={() => void tasks.refetch()}
+        />
+      ) : mode === "timeline" ? (
+        <WeekTimeline
+          days={days}
+          tasks={tasks.data?.items}
+          timezone={today.data?.timezone}
+          today={today.data?.day}
+          isPending={tasks.isPending || today.isPending}
+          onOpenTask={setOpenTask}
         />
       ) : (
         <>

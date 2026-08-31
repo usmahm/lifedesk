@@ -98,6 +98,22 @@ export function localDateToCalendarDay(date: Date): CalendarDay {
   return `${y}-${m}-${d}` as CalendarDay;
 }
 
+/**
+ * How far into its local day an instant falls, in minutes.
+ *
+ * Lets the grid place the current-time line and a tracked session on the same
+ * minute-of-day axis as a planned block.
+ */
+export function minuteOfDayIn(instant: Date, timezone: string): number {
+  const [hours, minutes] = formatInTimeZone(instant, timezone, "HH:mm").split(":").map(Number);
+  return (hours ?? 0) * 60 + (minutes ?? 0);
+}
+
+/** Same, from a raw epoch reading — so a ticking clock needn't build a Date. */
+export function minuteOfDayAtMs(epochMs: number, timezone: string): number {
+  return minuteOfDayIn(new Date(epochMs), timezone);
+}
+
 export function addDays(day: CalendarDay, amount: number): CalendarDay {
   const d = parseDayAsUtcNoon(day);
   d.setUTCDate(d.getUTCDate() + amount);

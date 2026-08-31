@@ -87,6 +87,8 @@ export function createMemoryTaskRepo(db: MemoryDb, now: () => Date): TaskRepo {
         estimateMin: input.estimateMin ?? null,
         scheduledFor: input.scheduledFor ?? null,
         dueDate: input.dueDate ?? null,
+        plannedStartMin: input.plannedStartMin ?? null,
+        plannedEndMin: input.plannedEndMin ?? null,
         completedAt: null,
         sortOrder: nextSortOrder(mine(userId)),
         createdAt: at,
@@ -110,6 +112,13 @@ export function createMemoryTaskRepo(db: MemoryDb, now: () => Date): TaskRepo {
             ? existing.completedAt
             : null;
 
+      // A block only means something on a day. Clearing the day clears it,
+      // rather than leaving an orphan the grid can never show.
+      const scheduledFor =
+        input.scheduledFor !== undefined ? (input.scheduledFor ?? null) : existing.scheduledFor;
+
+      const clearsBlock = scheduledFor === null;
+
       const updated: Task = {
         ...existing,
         projectId: input.projectId !== undefined ? (input.projectId ?? null) : existing.projectId,
@@ -120,9 +129,18 @@ export function createMemoryTaskRepo(db: MemoryDb, now: () => Date): TaskRepo {
         priority: input.priority ?? existing.priority,
         estimateMin:
           input.estimateMin !== undefined ? (input.estimateMin ?? null) : existing.estimateMin,
-        scheduledFor:
-          input.scheduledFor !== undefined ? (input.scheduledFor ?? null) : existing.scheduledFor,
+        scheduledFor,
         dueDate: input.dueDate !== undefined ? (input.dueDate ?? null) : existing.dueDate,
+        plannedStartMin: clearsBlock
+          ? null
+          : input.plannedStartMin !== undefined
+            ? (input.plannedStartMin ?? null)
+            : existing.plannedStartMin,
+        plannedEndMin: clearsBlock
+          ? null
+          : input.plannedEndMin !== undefined
+            ? (input.plannedEndMin ?? null)
+            : existing.plannedEndMin,
         completedAt,
         sortOrder: input.sortOrder ?? existing.sortOrder,
         updatedAt: now(),

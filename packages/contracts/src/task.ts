@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { calendarDaySchema, cursorPageSchema, idSchema, sortOrderSchema } from "./common";
+import {
+  calendarDaySchema,
+  cursorPageSchema,
+  endMinuteSchema,
+  idSchema,
+  sortOrderSchema,
+  startMinuteSchema,
+} from "./common";
 
 export const TASK_STATUSES = ["todo", "doing", "done", "cancelled"] as const;
 
@@ -34,6 +41,19 @@ export const taskSchema = z.object({
   /** The day this is *due*. Distinct from when it's planned. */
   dueDate: calendarDaySchema.nullable(),
 
+  /**
+   * When on that day the time is set aside — a block on the grid.
+   *
+   * Deliberately separate from `estimateMin`: an estimate is how long you
+   * think it takes, a block is when you reserved the time. Coupling them means
+   * revising an estimate silently resizes your calendar. Keeping both also
+   * surfaces a real signal — blocked 2h, estimated 3h.
+   *
+   * Both null or both set; only meaningful alongside `scheduledFor`.
+   */
+  plannedStartMin: startMinuteSchema.nullable(),
+  plannedEndMin: endMinuteSchema.nullable(),
+
   completedAt: z.date().nullable(),
   sortOrder: sortOrderSchema,
   createdAt: z.date(),
@@ -62,6 +82,8 @@ export const createTaskInput = taskSchema
     estimateMin: true,
     scheduledFor: true,
     dueDate: true,
+    plannedStartMin: true,
+    plannedEndMin: true,
   })
   .partial()
   .required({ title: true });
@@ -106,3 +128,30 @@ export const setTaskTagsInput = z.object({
 });
 
 export type SetTaskTagsInput = z.infer<typeof setTaskTagsInput>;
+
+/**
+ * Block a task into a time range on its scheduled day, or clear the block by
+ * passing null for both.
+ *
+ * A block belongs to exactly one day — ranges crossing midnight are not
+ * supported. Split them, or leave the tail untracked.
+ */
+export const setTaskPlannedTimeInput = z
+  .object({
+    id: idSchema,
+    plannedStartMin: startMinuteSchema.nullable(),
+    plannedEndMin: endMinuteSchema.nullable(),
+  })
+  .refine((v) => (v.plannedStartMin === null) === (v.plannedEndMin === null), {
+    message: "Set both a start and an end, or neither",
+    path: ["plannedEndMin"],
+  })
+  .refine(
+    (v) =>
+      v.plannedStartMin === null ||
+      v.plannedEndMin === null ||
+      v.plannedEndMin > v.plannedStartMin,
+    { message: "End must be after start", path: ["plannedEndMin"] },
+  );
+
+export type SetTaskPlannedTimeInput = z.infer<typeof setTaskPlannedTimeInput>;

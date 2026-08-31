@@ -30,6 +30,7 @@ import { orpc } from "@/lib/orpc/client";
 import { NO_VALUE } from "../constants";
 import { useDeleteTask, useUpdateTask } from "../hooks/useTaskMutations";
 import { DayPicker } from "./DayPicker";
+import { PlannedTimeFields } from "./PlannedTimeFields";
 
 /**
  * Task detail.
@@ -194,6 +195,9 @@ function TaskDetailForm({
               />
             </div>
           </div>
+
+          {/* Keyed on the day so clearing it re-seeds the emptied fields. */}
+          <PlannedTimeFields key={task.scheduledFor ?? "unscheduled"} task={task} />
 
           <div className="space-y-1.5">
             <Label htmlFor="task-notes">Notes</Label>

@@ -36,7 +36,7 @@ Tokens live in `packages/ui/src/styles/globals.css` as shadcn CSS variables. Bas
 
 ### Two hard rules
 
-**1. Area colour is a 3px left edge or a 6px dot. Never a filled background.**
+**1. Area colour is a 3px left edge or a 6px dot. Never a filled background — outside the time grid.**
 
 Filled colour backgrounds turn any list of eight items into a fruit salad, and they're the single fastest way to lose the calm. The area's identity needs to be *findable*, not *loud*.
 
@@ -45,9 +45,13 @@ Filled colour backgrounds turn any list of eight items into a fruit salad, and t
 <span className="size-1.5 rounded-full" style={{ background: area.color }} />
 <div className="border-l-[3px]" style={{ borderColor: area.color }}>
 
-// never
+// never, in a list row
 <div style={{ background: area.color }}>
 ```
+
+**The one exception: blocks on the time grid.** There, fill is how duration is *perceived* — a three-hour block drawn as a hairline outline is unreadable, and the eye needs area to read as time. Grid blocks use the `.schedule-block` class in `globals.css`: area colour at ~12% alpha (22% dark) with a solid 3px left edge.
+
+The alpha lives in that one class on purpose. **If a day holding six different areas starts reading like a spreadsheet, lower it there** — that is the failure mode to watch, and most calendar UIs are on the wrong side of it. Hour markers stay hairlines and grid cells get no borders; a bordered grid is what makes a calendar feel like a spreadsheet.
 
 **2. `--focus` green means exactly one thing: a session is running.**
 

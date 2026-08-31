@@ -1,159 +1,191 @@
 "use client";
 
-import { formatDay, formatDuration, formatTimeOfDay, toCalendarDay } from "@lifedesk/core/time";
-import { Badge } from "@lifedesk/ui/components/badge";
+import type { CalendarDay } from "@lifedesk/contracts";
+import {
+  addDays,
+  formatDay,
+  formatDayRelative,
+  formatDuration,
+} from "@lifedesk/core/time";
 import { Button } from "@lifedesk/ui/components/button";
+import { AreaDot } from "@lifedesk/ui/components/domain/area-dot";
 import { EmptyState } from "@lifedesk/ui/components/domain/empty-state";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Check } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 import { ErrorState } from "@/components/ErrorState";
+import { DayGrid, sessionsToGridItems, useNowMinute } from "@/features/schedule";
 import { useToday } from "@/features/settings/hooks/useToday";
 import { orpc } from "@/lib/orpc/client";
 
+import { RunawayBanner } from "./RunawayBanner";
+import { SessionList } from "./SessionList";
+
 /**
- * Tracked sessions, newest first.
+ * Where the hours actually went, one day at a time.
  *
- * Sessions flagged `needsReview` are surfaced at the top — those are almost
- * always a timer left running overnight, and silently logging fourteen hours
- * would poison every report downstream.
+ * Day-scoped rather than an endless log: "what did I do yesterday" is the
+ * question this page exists to answer, and a flat list reprinting its own date
+ * on every row answers it badly.
+ *
+ * Note this grid plots *actuals*. Today and Week plot plans. Overlaying the
+ * two is deliberately deferred — see docs/PLAN.md.
  */
 export function SessionsView() {
-  const queryClient = useQueryClient();
   const today = useToday();
   const timezone = today.data?.timezone ?? "UTC";
+  const nowMinute = useNowMinute(today.data?.timezone) ?? 0;
 
-  const sessions = useQuery(
-    orpc.session.list.queryOptions({ input: { filters: {}, page: { limit: 60 } } }),
-  );
-  const tasks = useQuery(orpc.task.list.queryOptions({ input: { filters: {}, page: { limit: 200 } } }));
+  const [day, setDay] = useState<CalendarDay | null>(null);
+  const activeDay = day ?? today.data?.day;
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: orpc.session.key() });
-
-  const update = useMutation(
-    orpc.session.update.mutationOptions({
-      onSuccess: invalidate,
-      onError: (error) => toast.error(error.message),
+  const sessions = useQuery({
+    ...orpc.session.list.queryOptions({
+      input: {
+        filters: { from: activeDay as CalendarDay, to: activeDay as CalendarDay },
+        page: { limit: 100 },
+      },
     }),
+    enabled: Boolean(activeDay),
+  });
+
+  const tasks = useQuery(
+    orpc.task.list.queryOptions({ input: { filters: {}, page: { limit: 200 } } }),
   );
-  const remove = useMutation(
-    orpc.session.remove.mutationOptions({
-      onSuccess: invalidate,
-      onError: (error) => toast.error(error.message),
-    }),
-  );
+  const areas = useQuery(orpc.area.list.queryOptions({ input: { includeArchived: true } }));
 
   const titleFor = (taskId: string | null) =>
     tasks.data?.items.find((task) => task.id === taskId)?.title ?? "Untitled session";
 
-  if (sessions.isPending) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-9 w-48" />
-        <div className="space-y-2">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-12" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (sessions.isError) {
+  if (today.isError) {
     return (
       <ErrorState
-        title="Couldn't load your sessions."
-        detail={sessions.error.message}
-        onRetry={() => void sessions.refetch()}
+        title="Couldn't work out what day it is."
+        detail={today.error.message}
+        onRetry={() => void today.refetch()}
       />
     );
   }
 
-  const flagged = sessions.data.items.filter((s) => s.needsReview);
-  const normal = sessions.data.items.filter((s) => !s.needsReview);
+  const items = sessions.data?.items ?? [];
+  const totalSec = items.reduce((sum, session) => sum + (session.durationSec ?? 0), 0);
+
+  const byArea = new Map<string | null, number>();
+  for (const session of items) {
+    byArea.set(session.areaId, (byArea.get(session.areaId) ?? 0) + (session.durationSec ?? 0));
+  }
+
+  const gridItems = sessionsToGridItems(
+    items,
+    areas.data,
+    timezone,
+    (session) => titleFor(session.taskId),
+    nowMinute,
+  );
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="font-serif text-3xl leading-tight md:text-4xl">Sessions</h1>
-        <p className="text-muted-foreground mt-2 text-sm">Where the hours actually went.</p>
+      <header className="space-y-4">
+        <div>
+          <h1 className="font-serif text-3xl leading-tight md:text-4xl">Sessions</h1>
+          <p className="text-muted-foreground mt-2 text-sm">Where the hours actually went.</p>
+        </div>
+
+        {/* The runaway guard stays visible from any day — burying a forgotten
+            timer in a day you aren't looking at defeats the point of it. */}
+        <RunawayBanner timezone={timezone} onGoToDay={setDay} titleFor={titleFor} />
+
+        <div className="flex items-center justify-between gap-3">
+          {today.isPending || !activeDay ? (
+            <Skeleton className="h-7 w-40" />
+          ) : (
+            <div>
+              <p className="text-base font-medium">
+                {formatDayRelative(activeDay, today.data.day)}
+              </p>
+              <p className="text-muted-foreground text-xs">{formatDay(activeDay, "d MMMM yyyy")}</p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Previous day"
+              disabled={!activeDay}
+              onClick={() => activeDay && setDay(addDays(activeDay, -1))}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            {activeDay !== today.data?.day && (
+              <Button variant="ghost" size="sm" onClick={() => setDay(null)}>
+                Today
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Next day"
+              disabled={!activeDay}
+              onClick={() => activeDay && setDay(addDays(activeDay, 1))}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
       </header>
 
-      {flagged.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="text-warning flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
-            <AlertTriangle className="size-3.5" />
-            Needs review
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            These ran unusually long — most likely a timer that was never stopped.
-          </p>
-
-          <ul className="divide-border divide-y">
-            {flagged.map((session) => (
-              <li key={session.id} className="flex h-14 items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{titleFor(session.taskId)}</p>
-                  <p className="text-muted-foreground text-xs tabular-nums">
-                    {formatDay(toCalendarDay(session.startedAt, timezone), "EEE d MMM")} ·{" "}
-                    {formatTimeOfDay(session.startedAt, timezone)}
-                  </p>
-                </div>
-
-                <Badge variant="secondary" className="tabular-nums">
-                  {formatDuration(session.durationSec ?? 0)}
-                </Badge>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => update.mutate({ id: session.id, needsReview: false })}
-                  aria-label="Mark this session as correct"
-                >
-                  <Check className="size-3.5" />
-                  Keep
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => remove.mutate({ id: session.id })}
-                >
-                  Discard
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {normal.length === 0 ? (
-        <EmptyState title="No sessions tracked yet. Hit play on a task to start the clock." />
+      {sessions.isError ? (
+        <ErrorState
+          title="Couldn't load that day."
+          detail={sessions.error.message}
+          onRetry={() => void sessions.refetch()}
+        />
+      ) : sessions.isPending || !activeDay ? (
+        <Skeleton className="h-105" />
+      ) : items.length === 0 ? (
+        <EmptyState
+          title={
+            activeDay === today.data?.day
+              ? "Nothing tracked yet today. Hit play on a task to start the clock."
+              : "Nothing was tracked on this day."
+          }
+        />
       ) : (
-        <ul className="divide-border divide-y">
-          {normal.map((session) => (
-            <li key={session.id} className="flex h-14 items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm">{titleFor(session.taskId)}</p>
-                <p className="text-muted-foreground text-xs tabular-nums">
-                  {formatDay(toCalendarDay(session.startedAt, timezone), "EEE d MMM")} ·{" "}
-                  {formatTimeOfDay(session.startedAt, timezone)}
-                  {session.endedAt && ` – ${formatTimeOfDay(session.endedAt, timezone)}`}
-                </p>
-              </div>
+        <>
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <p className="text-lg font-medium tabular-nums">{formatDuration(totalSec)}</p>
+            {[...byArea.entries()]
+              .sort(([, a], [, b]) => b - a)
+              .map(([areaId, seconds]) => {
+                const area = areas.data?.find((candidate) => candidate.id === areaId);
+                return (
+                  <span
+                    key={areaId ?? "none"}
+                    className="text-muted-foreground flex items-center gap-1.5 text-xs"
+                  >
+                    {area && <AreaDot color={area.color} label={area.name} />}
+                    {area?.name ?? "No area"}
+                    <span className="tabular-nums">{formatDuration(seconds)}</span>
+                  </span>
+                );
+              })}
+          </div>
 
-              <span className="text-sm tabular-nums">
-                {session.durationSec === null ? (
-                  <span className="text-focus">running</span>
-                ) : (
-                  formatDuration(session.durationSec)
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
+          <DayGrid
+            days={[{ day: activeDay, items: gridItems }]}
+            timezone={today.data?.timezone}
+            today={today.data?.day}
+          />
+
+          <SessionList
+            sessions={items}
+            timezone={timezone}
+            titleFor={titleFor}
+          />
+        </>
       )}
     </div>
   );

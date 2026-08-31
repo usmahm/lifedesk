@@ -60,3 +60,22 @@ export type Page<T> = {
 
 /** Sort position. Explicit from day one so drag-and-drop is a UI change later. */
 export const sortOrderSchema = z.number().int();
+
+export const MINUTES_PER_DAY = 1440;
+
+/**
+ * A wall-clock time on a day, as minutes from local midnight.
+ *
+ * Planned time is an intent — "09:00 on Thursday" means 09:00 wherever you
+ * are. Stored as a plain minute offset alongside a CalendarDay, it cannot
+ * drift when you travel or when the clocks change. A UTC instant would.
+ * See .claude/rules/dates-and-timezones.md.
+ */
+export const startMinuteSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(MINUTES_PER_DAY - 1);
+
+/** Exclusive end, so a block may finish at midnight. */
+export const endMinuteSchema = z.number().int().min(1).max(MINUTES_PER_DAY);

@@ -217,6 +217,36 @@
 }
 
 /*
+ * Time-grid blocks — the one place area colour is allowed to fill.
+ *
+ * The "never a fill" rule was written for lists, where eight filled rows is
+ * fruit salad. On a time grid fill is how duration is *perceived*: a
+ * three-hour block drawn as a hairline outline is unreadable.
+ *
+ * The alpha below is the thing to watch. If a day with six different areas
+ * starts reading like a spreadsheet, lower it here — one place, both themes.
+ * See .claude/rules/design-tokens.md.
+ */
+@layer components {
+  .schedule-block {
+    background-color: color-mix(in oklab, var(--block-color) 12%, transparent);
+    border-left: 3px solid var(--block-color);
+  }
+
+  .dark .schedule-block {
+    background-color: color-mix(in oklab, var(--block-color) 22%, transparent);
+  }
+
+  .schedule-block:hover {
+    background-color: color-mix(in oklab, var(--block-color) 18%, transparent);
+  }
+
+  .dark .schedule-block:hover {
+    background-color: color-mix(in oklab, var(--block-color) 30%, transparent);
+  }
+}
+
+/*
  * Nothing moves that the user didn't move. The reduced path is instant,
  * not merely faster.
  */

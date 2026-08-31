@@ -87,6 +87,17 @@ export function useScheduleTask() {
   );
 }
 
+export function useSetTaskPlannedTime() {
+  const invalidate = useTaskInvalidation();
+
+  return useMutation(
+    orpc.task.setPlannedTime.mutationOptions({
+      onSuccess: invalidate,
+      onError: (error) => toast.error(error.message),
+    }),
+  );
+}
+
 export function useDeleteTask() {
   const invalidate = useTaskInvalidation();
 

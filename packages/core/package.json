@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./time": "./src/time/index.ts",
-    "./capacity": "./src/capacity/index.ts"
+    "./capacity": "./src/capacity/index.ts",
+    "./schedule": "./src/schedule/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
