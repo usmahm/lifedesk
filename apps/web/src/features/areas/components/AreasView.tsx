@@ -17,9 +17,7 @@ import { orpc } from "@/lib/orpc/client";
 export function AreasView() {
   const queryClient = useQueryClient();
   const areas = useQuery(orpc.area.list.queryOptions({ input: { includeArchived: false } }));
-  const projects = useQuery(
-    orpc.project.list.queryOptions({ input: { includeArchived: false } }),
-  );
+  const projects = useQuery(orpc.project.list.queryOptions({ input: { includeArchived: false } }));
 
   const [name, setName] = useState("");
 
@@ -48,14 +46,14 @@ export function AreasView() {
     <div className="space-y-8">
       <header>
         <h1 className="font-serif text-3xl leading-tight md:text-4xl">Areas</h1>
-        <p className="text-muted-foreground mt-2 text-sm">
+        <p className="mt-2 text-sm text-muted-foreground">
           The long-lived buckets your work falls into.
         </p>
       </header>
 
       <form onSubmit={handleCreate} className="relative">
         <Plus
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
         <Input
@@ -82,7 +80,7 @@ export function AreasView() {
       ) : areas.data.length === 0 ? (
         <EmptyState title="No areas yet. Research, Work, Health — whatever your life actually splits into." />
       ) : (
-        <ul className="divide-border divide-y">
+        <ul className="divide-y divide-border">
           {areas.data.map((area) => {
             const count =
               projects.data?.filter((project) => project.areaId === area.id).length ?? 0;
@@ -91,11 +89,11 @@ export function AreasView() {
               <li key={area.id}>
                 <Link
                   href={`/areas/${area.id}`}
-                  className="hover:bg-accent/40 focus-visible:ring-ring -mx-2 flex h-14 items-center gap-3 rounded-md px-2 transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none"
+                  className="-mx-2 flex h-14 items-center gap-3 rounded-md px-2 transition-colors duration-150 hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <AreaDot color={area.color} label={area.name} className="size-2" />
                   <span className="flex-1 truncate text-sm font-medium">{area.name}</span>
-                  <span className="text-muted-foreground text-xs tabular-nums">
+                  <span className="text-xs text-muted-foreground tabular-nums">
                     {count === 0 ? "No projects" : count === 1 ? "1 project" : `${count} projects`}
                   </span>
                 </Link>
@@ -105,7 +103,7 @@ export function AreasView() {
         </ul>
       )}
 
-      <p className="text-muted-foreground text-xs">
+      <p className="text-xs text-muted-foreground">
         {AREA_COLOR_OPTIONS.length} colours available — each new area takes the next unused one.
       </p>
     </div>

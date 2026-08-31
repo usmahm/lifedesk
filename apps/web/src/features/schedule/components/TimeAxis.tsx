@@ -11,15 +11,11 @@ import { AXIS_WIDTH_PX } from "../constants";
  */
 export function TimeAxis({ window }: { window: DayWindow }) {
   return (
-    <div
-      className="relative shrink-0 select-none"
-      style={{ width: AXIS_WIDTH_PX }}
-      aria-hidden
-    >
+    <div className="relative shrink-0 select-none" style={{ width: AXIS_WIDTH_PX }} aria-hidden>
       {hoursInWindow(window).map((hour) => (
         <span
           key={hour}
-          className="text-muted-foreground/70 absolute right-2 -translate-y-1/2 text-[11px] tabular-nums"
+          className="absolute right-2 -translate-y-1/2 text-[11px] text-muted-foreground/70 tabular-nums"
           style={{ top: `${minuteToOffsetPct(hour * 60, window)}%` }}
         >
           {formatMinuteOfDay(hour * 60)}
@@ -41,7 +37,7 @@ export function HourRules({ window }: { window: DayWindow }) {
       {hoursInWindow(window).map((hour) => (
         <div
           key={hour}
-          className="border-border/50 absolute inset-x-0 border-t"
+          className="absolute inset-x-0 border-t border-border/50"
           style={{ top: `${minuteToOffsetPct(hour * 60, window)}%` }}
         />
       ))}

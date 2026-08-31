@@ -17,7 +17,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Main"
-      className="border-border bg-background grid border-t pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="grid border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
       style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
     >
       {tabs.map((item) => {
@@ -30,8 +30,8 @@ export function MobileTabBar() {
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex h-14 flex-col items-center justify-center gap-1 text-[11px] transition-colors duration-150",
-              "focus-visible:ring-ring focus-visible:ring-inset focus-visible:ring-2 focus-visible:outline-none",
-              isActive ? "text-foreground font-medium" : "text-muted-foreground",
+              "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset",
+              isActive ? "font-medium text-foreground" : "text-muted-foreground",
             )}
           >
             <item.icon className="size-5" />

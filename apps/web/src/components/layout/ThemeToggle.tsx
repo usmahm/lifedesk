@@ -25,7 +25,7 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="sm"
-      className="text-muted-foreground w-full justify-start gap-2.5 px-2.5"
+      className="w-full justify-start gap-2.5 px-2.5 text-muted-foreground"
       onClick={() => setTheme(ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]!)}
       aria-label={`Theme: ${LABEL[current] ?? "System"}. Click to change.`}
     >

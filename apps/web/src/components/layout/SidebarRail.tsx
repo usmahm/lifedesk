@@ -12,11 +12,11 @@ import { ThemeToggle } from "./ThemeToggle";
  */
 export function SidebarRail() {
   return (
-    <aside className="border-border bg-sidebar hidden w-60 shrink-0 flex-col border-r md:flex">
+    <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
       <div className="flex h-14 items-center px-4">
         <Link
           href="/today"
-          className="focus-visible:ring-ring rounded-sm text-base font-medium tracking-tight focus-visible:ring-2 focus-visible:outline-none"
+          className="rounded-sm text-base font-medium tracking-tight focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           <span className="text-primary">◐</span> LifeDesk
         </Link>
@@ -27,13 +27,13 @@ export function SidebarRail() {
 
         <Separator className="my-4" />
 
-        <p className="text-muted-foreground px-2.5 pb-1.5 text-xs font-medium tracking-wide uppercase">
+        <p className="px-2.5 pb-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Areas
         </p>
         <AreaNavList />
       </div>
 
-      <div className="border-border space-y-1 border-t p-2">
+      <div className="space-y-1 border-t border-border p-2">
         <ThemeToggle />
         <SignOutButton />
       </div>

@@ -10,7 +10,7 @@ export function SignOutButton() {
         type="submit"
         variant="ghost"
         size="sm"
-        className="text-muted-foreground w-full justify-start gap-2.5 px-2.5"
+        className="w-full justify-start gap-2.5 px-2.5 text-muted-foreground"
       >
         <LogOut className="size-4" />
         Sign out

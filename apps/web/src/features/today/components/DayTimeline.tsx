@@ -43,7 +43,7 @@ export function DayTimeline({
 
   return (
     <div className="space-y-2">
-      <p className="text-muted-foreground text-xs">
+      <p className="text-xs text-muted-foreground">
         {blockedCount === 0
           ? "Nothing blocked yet."
           : `${blockedCount} blocked${unblockedCount > 0 ? ` · ${unblockedCount} without a time` : ""}`}

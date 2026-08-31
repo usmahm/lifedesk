@@ -70,7 +70,7 @@ export function WeekTimeline({
                 aria-current={isActive ? "date" : undefined}
                 className={cn(
                   "flex h-14 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md text-xs transition-colors duration-150",
-                  "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-accent",

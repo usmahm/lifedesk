@@ -34,7 +34,7 @@ export function MobileHeader() {
   );
 
   return (
-    <header className="border-border bg-background sticky top-0 z-20 flex h-14 items-center gap-1 border-b px-2 md:hidden">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-background px-2 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Open navigation">
@@ -52,13 +52,13 @@ export function MobileHeader() {
           <div className="flex-1 overflow-y-auto px-2">
             <NavLinks onNavigate={() => setOpen(false)} />
             <Separator className="my-4" />
-            <p className="text-muted-foreground px-2.5 pb-1.5 text-xs font-medium tracking-wide uppercase">
+            <p className="px-2.5 pb-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               Areas
             </p>
             <AreaNavList onNavigate={() => setOpen(false)} />
           </div>
 
-          <div className="border-border border-t p-2">
+          <div className="border-t border-border p-2">
             <ThemeToggle />
           </div>
         </SheetContent>

@@ -37,7 +37,9 @@ export function TaskList({
   if (isPending) return <TaskListSkeleton />;
 
   if (isError) {
-    return <ErrorState title="Couldn't load your tasks." detail={error?.message} onRetry={onRetry} />;
+    return (
+      <ErrorState title="Couldn't load your tasks." detail={error?.message} onRetry={onRetry} />
+    );
   }
 
   if (!tasks || tasks.length === 0) {

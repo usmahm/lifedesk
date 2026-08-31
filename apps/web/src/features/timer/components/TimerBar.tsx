@@ -37,7 +37,7 @@ export function TimerBar({ className }: { className?: string }) {
 
   if (running.isPending) {
     return (
-      <div className={cn("border-border bg-background border-t px-4 py-3 md:px-6", className)}>
+      <div className={cn("border-t border-border bg-background px-4 py-3 md:px-6", className)}>
         <Skeleton className="h-6 w-48" />
       </div>
     );
@@ -49,7 +49,7 @@ export function TimerBar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "border-border border-t transition-colors duration-150",
+        "border-t border-border transition-colors duration-150",
         isRunning ? "bg-focus/8" : "bg-background",
         className,
       )}
@@ -60,20 +60,20 @@ export function TimerBar({ className }: { className?: string }) {
             {/* Colour is never the only signal — the dot is paired with text. */}
             <span
               aria-hidden
-              className="bg-focus size-2 shrink-0 animate-pulse rounded-full motion-reduce:animate-none"
+              className="size-2 shrink-0 animate-pulse rounded-full bg-focus motion-reduce:animate-none"
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">
                 {task.data?.title ?? "Untitled session"}
               </p>
-              <p className="text-muted-foreground sr-only text-xs md:not-sr-only">
+              <p className="sr-only text-xs text-muted-foreground md:not-sr-only">
                 Session running
               </p>
             </div>
 
             {/* The elapsed value itself is not announced — it would speak every second. */}
             <span
-              className="text-focus text-xl font-medium tabular-nums"
+              className="text-xl font-medium text-focus tabular-nums"
               aria-label={`Elapsed ${formatDuration(elapsed)}`}
             >
               {formatElapsed(elapsed)}
@@ -91,12 +91,12 @@ export function TimerBar({ className }: { className?: string }) {
           </>
         ) : (
           <>
-            <span aria-hidden className="bg-muted-foreground/30 size-2 shrink-0 rounded-full" />
-            <p className="text-muted-foreground flex-1 text-sm">No session running</p>
+            <span aria-hidden className="size-2 shrink-0 rounded-full bg-muted-foreground/30" />
+            <p className="flex-1 text-sm text-muted-foreground">No session running</p>
           </>
         )}
 
-        <span className="text-muted-foreground hidden text-xs tabular-nums sm:inline">
+        <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
           {formatDuration(todayTotal)} today
         </span>
       </div>

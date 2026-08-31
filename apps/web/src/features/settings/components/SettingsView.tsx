@@ -64,7 +64,7 @@ export function SettingsView() {
       </header>
 
       <section className="space-y-5">
-        <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Planning
         </h2>
 
@@ -81,7 +81,7 @@ export function SettingsView() {
               <option key={zone} value={zone} />
             ))}
           </datalist>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-xs text-muted-foreground">
             Decides what counts as &ldquo;today&rdquo;. Not taken from your browser, so travelling
             doesn&rsquo;t move your plan.
           </p>
@@ -129,7 +129,7 @@ export function SettingsView() {
             }}
             className="w-full tabular-nums sm:w-56"
           />
-          <p className="text-muted-foreground text-xs">
+          <p className="text-xs text-muted-foreground">
             A soft cap. The meter goes amber past it — it never stops you.
           </p>
         </div>
@@ -138,10 +138,10 @@ export function SettingsView() {
       <Separator />
 
       <section className="space-y-2">
-        <h2 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Pomodoro
         </h2>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-sm text-muted-foreground">
           Work and break lengths, sounds, and the floating timer arrive in Phase 3.
         </p>
       </section>

@@ -6,12 +6,7 @@ import { minuteToOffsetPct } from "@lifedesk/core/time";
 import { cn } from "@lifedesk/ui/lib/utils";
 import { useRef } from "react";
 
-import {
-  AXIS_WIDTH_PX,
-  DEFAULT_BLOCK_MINUTES,
-  PX_PER_HOUR,
-  SLOT_SNAP_MINUTES,
-} from "../constants";
+import { AXIS_WIDTH_PX, DEFAULT_BLOCK_MINUTES, PX_PER_HOUR, SLOT_SNAP_MINUTES } from "../constants";
 import { useNowMinute } from "../hooks/useNowMinute";
 import type { GridDay, GridItem } from "../types";
 import { ScheduleBlock } from "./ScheduleBlock";
@@ -125,8 +120,7 @@ function DayColumn({
 
     const ratio = (event.clientY - box.top) / box.height;
     const rawMinute = window.startMin + ratio * (window.endMin - window.startMin);
-    const startMin =
-      Math.floor(rawMinute / SLOT_SNAP_MINUTES) * SLOT_SNAP_MINUTES;
+    const startMin = Math.floor(rawMinute / SLOT_SNAP_MINUTES) * SLOT_SNAP_MINUTES;
 
     onSelectSlot(
       day.day,
@@ -140,7 +134,7 @@ function DayColumn({
       ref={columnRef}
       onClick={handleClick}
       className={cn(
-        "border-border/50 relative min-w-0 flex-1 border-l first:border-l-0",
+        "relative min-w-0 flex-1 border-l border-border/50 first:border-l-0",
         onSelectSlot && "cursor-copy",
       )}
     >
@@ -154,9 +148,10 @@ function DayColumn({
         />
       ))}
 
-      {isToday && nowMinute !== null && nowMinute >= window.startMin && nowMinute <= window.endMin && (
-        <NowLine offsetPct={minuteToOffsetPct(nowMinute, window)} />
-      )}
+      {isToday &&
+        nowMinute !== null &&
+        nowMinute >= window.startMin &&
+        nowMinute <= window.endMin && <NowLine offsetPct={minuteToOffsetPct(nowMinute, window)} />}
     </div>
   );
 }
@@ -169,8 +164,8 @@ function NowLine({ offsetPct }: { offsetPct: number }) {
       style={{ top: `${offsetPct}%` }}
       aria-hidden
     >
-      <div className="bg-focus h-px w-full" />
-      <div className="bg-focus absolute -top-[3px] left-0 size-[7px] rounded-full" />
+      <div className="h-px w-full bg-focus" />
+      <div className="absolute -top-[3px] left-0 size-[7px] rounded-full bg-focus" />
     </div>
   );
 }

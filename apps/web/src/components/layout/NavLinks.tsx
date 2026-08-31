@@ -22,9 +22,9 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors duration-150",
-              "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+              "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
               isActive
-                ? "bg-accent text-accent-foreground font-medium"
+                ? "bg-accent font-medium text-accent-foreground"
                 : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
             )}
           >

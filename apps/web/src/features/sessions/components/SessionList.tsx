@@ -33,7 +33,7 @@ export function SessionList({
   const ordered = [...sessions].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
 
   return (
-    <ul className="divide-border divide-y">
+    <ul className="divide-y divide-border">
       {ordered.map((session) => {
         const area = areas.data?.find((candidate) => candidate.id === session.areaId);
 
@@ -43,7 +43,7 @@ export function SessionList({
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm">{titleFor(session.taskId)}</p>
-              <p className="text-muted-foreground text-xs tabular-nums">
+              <p className="text-xs text-muted-foreground tabular-nums">
                 {formatTimeOfDay(session.startedAt, timezone)}
                 {session.endedAt && ` – ${formatTimeOfDay(session.endedAt, timezone)}`}
               </p>
@@ -60,7 +60,7 @@ export function SessionList({
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:text-destructive size-8 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+              className="size-8 shrink-0 text-muted-foreground opacity-100 hover:text-destructive md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
               aria-label={`Delete session for ${titleFor(session.taskId)}`}
               disabled={session.endedAt === null}
               onClick={() => remove.mutate({ id: session.id })}

@@ -54,18 +54,18 @@ export function RunawayBanner({
 
   return (
     <section
-      className="border-warning/40 bg-warning/5 space-y-2 rounded-lg border p-3"
+      className="space-y-2 rounded-lg border border-warning/40 bg-warning/5 p-3"
       aria-label="Sessions needing review"
     >
-      <h2 className="text-warning flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
+      <h2 className="flex items-center gap-2 text-xs font-medium tracking-wide text-warning uppercase">
         <AlertTriangle className="size-3.5" />
         {items.length === 1 ? "1 session needs review" : `${items.length} sessions need review`}
       </h2>
-      <p className="text-muted-foreground text-sm">
+      <p className="text-sm text-muted-foreground">
         These ran unusually long — most likely a timer that was never stopped.
       </p>
 
-      <ul className="divide-border/60 divide-y">
+      <ul className="divide-y divide-border/60">
         {items.map((session) => {
           const day = toCalendarDay(session.startedAt, timezone);
 
@@ -76,7 +76,7 @@ export function RunawayBanner({
                 <button
                   type="button"
                   onClick={() => onGoToDay(day)}
-                  className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm text-xs tabular-nums underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
+                  className="rounded-sm text-xs text-muted-foreground tabular-nums underline underline-offset-2 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   {formatDay(day, "EEE d MMM")} · {formatDuration(session.durationSec ?? 0)}
                 </button>
