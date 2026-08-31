@@ -2,22 +2,28 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalDependencies": ["**/.env.*local", "tsconfig.json"],
+  "globalEnv": ["NODE_ENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"]
+      "dependsOn": ["^typecheck"],
+      "env": ["DATABASE_URL", "DIRECT_URL"]
     },
-    "test": {},
+    "test": {
+      "env": ["DATABASE_URL", "DIRECT_URL"]
+    },
     "clean": {
       "cache": false
     }

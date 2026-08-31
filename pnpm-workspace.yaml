@@ -3,6 +3,11 @@ packages:
   - "packages/*"
   - "tooling/*"
 
+allowBuilds:
+  '@prisma/engines': set this to true or false
+  esbuild: set this to true or false
+  prisma: set this to true or false
+
 # Single source of truth for every version in the monorepo.
 # Packages reference these with "catalog:" — never a literal version.
 # Do not bump anything here without asking. See docs/PLAN.md §6.1.
@@ -38,6 +43,18 @@ catalog:
   date-fns: 4.4.0
   date-fns-tz: 3.2.0
 
+  # --- database ---
+  # Prisma is pinned to 7.10.0, NOT 8.x. The `prisma` CLI's "latest" tag points
+  # at 8.0.0-rc.12 — a release candidate — while @prisma/client's latest is
+  # still 7.10.0, and @prisma/adapter-neon has no 8.x release at all. All three
+  # must move together. See docs/PLAN.md §6.1.
+  prisma: 7.10.0
+  "@prisma/client": 7.10.0
+  "@prisma/adapter-neon": 7.10.0
+  "@neondatabase/serverless": 1.1.0
+  tsx: 4.23.13
+  dotenv: 17.4.2
+
   # --- tooling ---
   # TypeScript is pinned to 6.0.3, NOT 7.x. typescript-eslint has no release
   # supporting TS 7 — even its canary caps at "<6.1.0". Revisit when it ships.
@@ -57,3 +74,11 @@ catalog:
   "@types/node": 26.4.0
   "@types/react": 19.2.18
   "@types/react-dom": 19.2.5
+
+# Build scripts are blocked by default. These three are approved deliberately:
+# Prisma's postinstall fetches its schema/migration engines, and esbuild pulls
+# its platform binary — without them the CLI cannot run at all.
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - prisma
+  - esbuild

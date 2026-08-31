@@ -1,0 +1,5 @@
+{
+  "extends": "@lifedesk/typescript-config/base.json",
+  "include": ["src/**/*.ts", "prisma/**/*.ts", "eslint.config.js", "prisma.config.ts"],
+  "exclude": ["node_modules", "src/generated"]
+}

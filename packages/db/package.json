@@ -1,0 +1,35 @@
+{
+  "name": "@lifedesk/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lifedesk/contracts": "workspace:*",
+    "@lifedesk/core": "workspace:*",
+    "@neondatabase/serverless": "catalog:",
+    "@prisma/adapter-neon": "catalog:",
+    "@prisma/client": "catalog:",
+    "dotenv": "catalog:"
+  },
+  "devDependencies": {
+    "@lifedesk/eslint-config": "workspace:*",
+    "@lifedesk/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prisma": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

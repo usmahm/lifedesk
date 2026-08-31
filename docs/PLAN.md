@@ -388,7 +388,7 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 - [x] 4. **`packages/core`** — time and capacity math, with unit tests
 - [x] 5. **`packages/api`** — repository interfaces, memory implementations, realistic fixtures, oRPC base router, `protectedProcedure` + dev session stub, routers for area / project / task / tag / session
 - [x] 6. **`apps/web` wiring** — `app/rpc/[[...rest]]/route.ts`, browser client, server-side client for RSC, TanStack Query with hydration
-- [ ] 6.5. **`.claude/` pass B** — descriptive rules and skills, written against the first real vertical slice (see §9)
+- [x] 6.5. **`.claude/` pass B** — descriptive rules and skills, written against the first real vertical slice (see §9)
 - [x] 7. **App shell** — rail, mobile tab bar, drawer, responsive breakpoints, theme toggle
 - [x] 8. **Auth screens** against the stub
 - [x] 9. **Areas & Projects** — list, detail, create/edit, archive
@@ -397,15 +397,9 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 - [x] 12. **Week** — desktop columns, mobile agenda, reschedule via date picker
 - [x] 13. **Timer** — start/stop anywhere, persistent TimerBar, session list, manual entry, runaway guard
 - [x] 14. **Settings** · PWA manifest, icons, install
-- [ ] 15. **Demo pass** — live in it on fixtures for a few days, fix what annoys
+- [ ] 15. **Demo pass** — live in it on fixtures, fix what annoys. Ongoing; findings land in Phase 2.5
 
-**Carried into the demo pass** (built, but knowingly thin):
-
-- Project detail page — projects are created and listed from the area page; there is no `/projects/[id]` yet
-- Tags exist end-to-end in the API but have no UI beyond the data model
-- Manual session entry and session editing — the API and the runaway-review flow are done; the "add a session by hand" form is not
-- Day intention line — designed in §4.7, not yet built
-- PWA raster icons (192/512 PNG); only the SVG ships
+**Known gaps, deliberately carried past the backend swap** → Phase 2.5. In every case the API is finished and only the UI is missing, so nothing here blocks Phase 2.
 
 ### Phase 2 — real backend _(no frontend changes)_
 
@@ -413,6 +407,21 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 - [ ] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
 - [ ] 18. Better Auth replacing the stub — email+password, Google, onboarding that seeds default areas and settings
 - [ ] 19. Rate limiting, error monitoring, deploy
+
+### Phase 2.5 — Phase 1 loose ends _(after the swap)_
+
+Deferred until the real backend is in. Two reasons, and they are the point rather than an excuse:
+
+1. **It protects the Phase 2 test.** The measure of a clean swap is `git diff --stat apps/web` being ~empty across the backend commits. Building new screens *during* the swap would make that number meaningless. Swap first, verify the diff, then build.
+2. **One of them needs a schema change anyway.** The intention line has no field in `packages/contracts`, so doing it after Prisma means adding a column once rather than adding it to the memory repos and migrating it a week later.
+
+The rest are pure UI against procedures that already exist, so they get built once, directly against the real database.
+
+- [ ] **Manual session entry and editing** — `session.create` and `session.update` exist with **0 web call sites**; only `RunawayBanner` calls `update`. A forgotten timer can be corrected, but a session you never started cannot be added. Highest value of the five: the plan calls this "not optional polish — you will forget to stop the timer"
+- [ ] **Project detail** — no `/projects/[id]`; `project.get` exists, **0 call sites**. Projects are created and listed from the area page but cannot be opened, which is a dead end you hit constantly
+- [ ] **Tags UI** — `tag.list`, `tag.create` and `task.addTag` are complete end-to-end and called from nowhere
+- [ ] **PWA raster icons** — 192/512 PNG; only `icon.svg` ships
+- [ ] **Day intention line** — designed in §4.7. Needs a `DayPlan`/intention field first, so it is the largest of the five, not the smallest
 
 ### Phase 1.5 — time blocking and timelines _(shipped)_
 
