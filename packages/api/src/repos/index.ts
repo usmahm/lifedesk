@@ -1,4 +1,5 @@
 import { createMemoryRepos } from "./memory/index";
+import { createPrismaRepos } from "./prisma/index";
 import type { Repos } from "./types";
 
 export * from "./types";
@@ -7,22 +8,38 @@ export { DEV_USER, DEV_USER_ID } from "./memory/index";
 /**
  * The one place storage is chosen.
  *
- * Phase 2 adds a Prisma branch here and flips the default. Nothing above this
- * line — no procedure, no hook, no component — should need to change.
- * See docs/PLAN.md §3.
+ * Nothing above this line — no procedure, no hook, no component — knows which
+ * implementation it is talking to. See docs/PLAN.md §3.
+ *
+ * Prisma is the default. Setting `LIFEDESK_REPOS=memory` falls back to the
+ * in-memory maps, which is how the app runs with no database at all: useful
+ * for a demo on a plane, and for bisecting whether a bug is in the UI or the
+ * queries underneath it.
  */
 
 let singleton: Repos | null = null;
 
+function useMemoryRepos(): boolean {
+  return process.env.LIFEDESK_REPOS === "memory" || !process.env.DATABASE_URL;
+}
+
 export function getRepos(now: () => Date): Repos {
-  // Module-level so mutations survive across requests in dev. Next's dev
-  // server re-evaluates modules on change, which resets the fixtures — that
-  // is acceptable for Phase 1 and goes away with the real database.
-  singleton ??= createMemoryRepos({ now });
+  singleton ??= useMemoryRepos() ? createMemoryRepos({ now }) : createPrismaRepos({ now });
   return singleton;
 }
 
 /** Test seam: build an isolated set of repositories with no shared state. */
 export function createTestRepos(options: { now: () => Date; seed?: boolean }): Repos {
   return createMemoryRepos(options);
+}
+
+/**
+ * The same seam, against the real database.
+ *
+ * The contract tests run the whole suite through both this and
+ * `createTestRepos`, which is what proves the two are interchangeable — the
+ * measure of whether the swap actually held.
+ */
+export function createPrismaTestRepos(options: { now: () => Date }): Repos {
+  return createPrismaRepos(options);
 }

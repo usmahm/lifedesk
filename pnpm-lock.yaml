@@ -258,6 +258,9 @@ importers:
       '@lifedesk/core':
         specifier: workspace:*
         version: link:../core
+      '@lifedesk/db':
+        specifier: workspace:*
+        version: link:../db
       '@orpc/client':
         specifier: 'catalog:'
         version: 1.15.0
@@ -277,6 +280,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.4.0
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.4.2
       eslint:
         specifier: 'catalog:'
         version: 10.9.1(jiti@2.7.0)

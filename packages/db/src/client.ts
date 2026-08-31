@@ -28,6 +28,31 @@ function createClient(): PrismaClient {
   return new PrismaClient({ adapter: new PrismaNeon({ connectionString }) });
 }
 
-export const prisma: PrismaClient = globalForPrisma.prisma ?? createClient();
+function resolve(): PrismaClient {
+  const existing = globalForPrisma.prisma;
+  if (existing) return existing;
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  const created = createClient();
+  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = created;
+  return created;
+}
+
+/**
+ * Constructed on first use, not on import.
+ *
+ * This matters beyond tidiness: `packages/api`'s repository factory imports
+ * both implementations so it can choose between them at runtime. Building the
+ * client eagerly would throw while that module was still loading, so the
+ * memory fallback could never be reached — the escape hatch would be dead code
+ * and a checkout with no `.env` would crash instead of degrading.
+ *
+ * Methods are bound to the real client so `this` survives the indirection;
+ * `$transaction` and friends break without it.
+ */
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, property) {
+    const client = resolve();
+    const value = Reflect.get(client, property, client) as unknown;
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
