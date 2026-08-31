@@ -47,6 +47,24 @@ export function clampMinuteOfDay(minuteOfDay: number): number {
   return Math.min(MINUTES_PER_DAY, Math.max(0, Math.round(minuteOfDay)));
 }
 
+/**
+ * Split a total into whole hours and leftover minutes, for a segmented field.
+ *
+ * Trivial arithmetic that nonetheless breaks at the boundaries — 90 is 1h 30m,
+ * 1440 is 24h 0m and not 0h — so it lives here with tests rather than inline
+ * in a component.
+ */
+export function splitMinutes(total: number): { hours: number; minutes: number } {
+  const clamped = Number.isFinite(total) ? Math.max(0, Math.round(total)) : 0;
+  return { hours: Math.floor(clamped / 60), minutes: clamped % 60 };
+}
+
+export function joinMinutes(hours: number, minutes: number): number {
+  const h = Number.isFinite(hours) ? Math.round(hours) : 0;
+  const m = Number.isFinite(minutes) ? Math.round(minutes) : 0;
+  return Math.max(0, h * 60 + m);
+}
+
 /** The `"HH:mm"` form `instantAt` expects, for converting a block to a UTC instant. */
 export function toClockTime(minuteOfDay: number): `${number}:${number}` {
   return formatMinuteOfDay(minuteOfDay) as `${number}:${number}`;

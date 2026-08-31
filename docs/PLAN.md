@@ -38,17 +38,17 @@ Built as a real multi-user product from day one (every row scoped to a user), wi
 
 ## 2. Locked decisions
 
-| Decision | Choice | Why |
-|---|---|---|
-| Hierarchy | **Areas → Projects → Tasks** + cross-cutting tags | Makes "where did my time go?" answerable at the level that matters |
-| Scope | Core loop first | Usable in weeks, not months |
-| Users | Multi-user from day one, **no social in v1** | Opening it up later isn't a rewrite; social doesn't block daily use |
-| Auth | Better Auth | TypeScript-native, self-hosted, first-class Prisma adapter |
-| Drag & drop | **Not in v1** | Keep it simple; `sortOrder` exists from day one so it's a UI change later |
-| Mobile | Responsive + PWA now, Expo later | Costs almost nothing now; native doubles UI work |
-| UI direction | **Calm workspace** | Warm paper, generous space, quiet type — for long research sessions |
-| Build order | **UI first on mock data**, backend swapped in after | Shakes out design problems while they're cheap |
-| Quick add | Deliberately simple, **no NLP parsing** | A parser wrong 15% of the time is worse than no parser |
+| Decision     | Choice                                              | Why                                                                       |
+| ------------ | --------------------------------------------------- | ------------------------------------------------------------------------- |
+| Hierarchy    | **Areas → Projects → Tasks** + cross-cutting tags   | Makes "where did my time go?" answerable at the level that matters        |
+| Scope        | Core loop first                                     | Usable in weeks, not months                                               |
+| Users        | Multi-user from day one, **no social in v1**        | Opening it up later isn't a rewrite; social doesn't block daily use       |
+| Auth         | Better Auth                                         | TypeScript-native, self-hosted, first-class Prisma adapter                |
+| Drag & drop  | **Not in v1**                                       | Keep it simple; `sortOrder` exists from day one so it's a UI change later |
+| Mobile       | Responsive + PWA now, Expo later                    | Costs almost nothing now; native doubles UI work                          |
+| UI direction | **Calm workspace**                                  | Warm paper, generous space, quiet type — for long research sessions       |
+| Build order  | **UI first on mock data**, backend swapped in after | Shakes out design problems while they're cheap                            |
+| Quick add    | Deliberately simple, **no NLP parsing**             | A parser wrong 15% of the time is worse than no parser                    |
 
 ---
 
@@ -69,7 +69,7 @@ apps/web  ──▶ oRPC client ──▶ real router ──▶ TaskRepo (interf
 
 Everything above the repository line is **real and final from day one**: real oRPC procedures, real Zod validation, real error shapes, real TanStack Query hooks with real loading, error, and empty states.
 
-The in-memory repos hold module-level maps seeded with realistic fixtures — a research project mid-flight, a week with some days full and some empty, sessions from last week so charts have something to draw. Mutations persist for the life of the dev server, so the demo *feels* like the product rather than a clickable mockup.
+The in-memory repos hold module-level maps seeded with realistic fixtures — a research project mid-flight, a week with some days full and some empty, sessions from last week so charts have something to draw. Mutations persist for the life of the dev server, so the demo _feels_ like the product rather than a clickable mockup.
 
 **Swap day:** write `packages/api/src/repos/prisma/*.ts` against the same interfaces, flip one factory. **Zero frontend files change.**
 
@@ -93,11 +93,11 @@ Two constraints that keep that promise honest:
 
 ### 4.2 Layout system
 
-| Breakpoint | Layout |
-|---|---|
-| **Desktop** ≥1024px | Persistent 240px left rail · content column capped at 720px · 320px right context panel for task detail (slides in, doesn't navigate away) |
-| **Tablet** 768–1023px | Rail collapses to a 64px icon strip; task detail becomes a sheet |
-| **Mobile** <768px | Bottom tab bar (Today · Week · Inbox · Areas); rail becomes a drawer; task detail is a full-height sheet; timer bar docks above the tab bar |
+| Breakpoint            | Layout                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Desktop** ≥1024px   | Persistent 240px left rail · content column capped at 720px · 320px right context panel for task detail (slides in, doesn't navigate away)  |
+| **Tablet** 768–1023px | Rail collapses to a 64px icon strip; task detail becomes a sheet                                                                            |
+| **Mobile** <768px     | Bottom tab bar (Today · Week · Inbox · Areas); rail becomes a drawer; task detail is a full-height sheet; timer bar docks above the tab bar |
 
 Responsive is built at every step, never retrofitted.
 
@@ -138,20 +138,20 @@ Base is shadcn `stone`. Primary is a muted clay — nods at the tomato without b
 
 ```css
 :root {
-  --background: oklch(0.99 0.004  85);  /* warm paper   */
-  --foreground: oklch(0.22 0.008  75);
-  --muted:      oklch(0.96 0.006  85);
-  --border:     oklch(0.92 0.006  85);
-  --primary:    oklch(0.55 0.13   40);  /* clay         */
-  --focus:      oklch(0.62 0.11  155);  /* session live */
+  --background: oklch(0.99 0.004 85); /* warm paper   */
+  --foreground: oklch(0.22 0.008 75);
+  --muted: oklch(0.96 0.006 85);
+  --border: oklch(0.92 0.006 85);
+  --primary: oklch(0.55 0.13 40); /* clay         */
+  --focus: oklch(0.62 0.11 155); /* session live */
 }
 .dark {
-  --background: oklch(0.18 0.006  70);
-  --foreground: oklch(0.93 0.006  85);
-  --muted:      oklch(0.24 0.008  70);
-  --border:     oklch(0.30 0.008  70);
-  --primary:    oklch(0.68 0.13   42);
-  --focus:      oklch(0.70 0.12  155);
+  --background: oklch(0.18 0.006 70);
+  --foreground: oklch(0.93 0.006 85);
+  --muted: oklch(0.24 0.008 70);
+  --border: oklch(0.3 0.008 70);
+  --primary: oklch(0.68 0.13 42);
+  --focus: oklch(0.7 0.12 155);
 }
 ```
 
@@ -173,14 +173,14 @@ Dark mode is designed, not inverted — first-class, because evening work is mos
 
 ### 4.6 Key components
 
-| Component | Behaviour |
-|---|---|
-| `TaskRow` | 48px tall (44px minimum tap target). Checkbox · title · area dot + project crumb · estimate chip · tracked chip when non-zero · play button revealed on hover, **always visible on touch** |
-| `TimerBar` | Persistent, docked bottom. Collapsed: task name, elapsed, stop. Expands to today's total and a pause. Turns `--focus` green while running |
-| `CapacityMeter` | Thin bar under the date. Planned estimate against daily capacity; shifts amber past 100%. Informs, never blocks |
-| `QuickAdd` | Single input at top of Day and Inbox. Type a title, press Enter, created in the current context. Area, estimate, and date are small optional chips beside the field. **No natural-language parsing** |
-| `TaskDetail` | Right panel on desktop, sheet on mobile. Title, notes (markdown), area/project, estimate, schedule, tags, session history |
-| `EmptyState` | No illustration. One line of copy, one action |
+| Component       | Behaviour                                                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TaskRow`       | 48px tall (44px minimum tap target). Checkbox · title · area dot + project crumb · estimate chip · tracked chip when non-zero · play button revealed on hover, **always visible on touch**           |
+| `TimerBar`      | Persistent, docked bottom. Collapsed: task name, elapsed, stop. Expands to today's total and a pause. Turns `--focus` green while running                                                            |
+| `CapacityMeter` | Thin bar under the date. Planned estimate against daily capacity; shifts amber past 100%. Informs, never blocks                                                                                      |
+| `QuickAdd`      | Single input at top of Day and Inbox. Type a title, press Enter, created in the current context. Area, estimate, and date are small optional chips beside the field. **No natural-language parsing** |
+| `TaskDetail`    | Right panel on desktop, sheet on mobile. Title, notes (markdown), area/project, estimate, schedule, tags, session history                                                                            |
+| `EmptyState`    | No illustration. One line of copy, one action                                                                                                                                                        |
 
 ### 4.7 Screens (Phase 1)
 
@@ -188,7 +188,7 @@ Dark mode is designed, not inverted — first-class, because evening work is mos
 - **Week** — `List | Timeline` toggle, list the default, choice remembered per viewer. Timeline is seven time-grid columns on desktop, one plus the day strip on mobile. List view: seven columns on desktop. **On mobile, a vertical agenda** with sticky day headers and a horizontal day-strip selector; seven columns on a phone is unreadable. Reschedule via date picker, not a drag
 - **Inbox** — unscheduled capture, with one-tap "schedule for today"
 - **Areas** → area detail → project detail
-- **Sessions** — **day-scoped**: prev/next day navigation, that day's timeline of *tracked* time, day total and per-area breakdown, the day's session list. The runaway-review banner is global, not per-day — a forgotten timer must be visible from whatever day you're on
+- **Sessions** — **day-scoped**: prev/next day navigation, that day's timeline of _tracked_ time, day total and per-area breakdown, the day's session list. The runaway-review banner is global, not per-day — a forgotten timer must be visible from whatever day you're on
 - **Settings** — timezone, week start, daily capacity, theme
 - **Sign in / sign up** — built for real against the auth stub
 
@@ -209,6 +209,7 @@ Most planners fail because they're an infinite list with dates attached. LifeDes
 Additions beyond the original ask are marked **[+]**, with reasoning.
 
 **Planning**
+
 - Areas → Projects → Tasks, plus cross-cutting tags
 - Day, Week, Inbox
 - **Month = outcomes and milestones, not a task grid [+]** — a month grid of tasks is unreadable and nobody uses it. What a month is good for is "ship the draft, finish two chapters, run the ablations"
@@ -216,6 +217,7 @@ Additions beyond the original ask are marked **[+]**, with reasoning.
 - **Daily capacity warning [+]** — a soft cap, so you notice you've planned nine hours before the day rather than after it
 
 **Time tracking**
+
 - One click from a task to start; stop when done
 - Manual entry and session editing — **you will forget to stop the timer**, so this is not optional polish
 - **Runaway guard [+]** — a session past a threshold is flagged for review rather than silently logging 14 hours
@@ -223,6 +225,7 @@ Additions beyond the original ask are marked **[+]**, with reasoning.
 - One running session per user, enforced at the data layer
 
 **Pomodoro** (borrowed from Tomito)
+
 - Configurable work / short break / long break and long-break interval
 - Desktop notifications, alert sound, optional ticking
 - Daily and weekly session stats
@@ -251,18 +254,18 @@ Additions beyond the original ask are marked **[+]**, with reasoning.
 
 Versions verified against npm on 2026-08-30. **Pin these exactly.**
 
-| Concern | Choice | Version |
-|---|---|---|
-| Monorepo | pnpm workspaces + Turborepo | turbo 2.10.12 |
-| App | Next.js App Router | 16.3.3 (React 19.2.8) |
-| UI | shadcn/ui + Tailwind | CLI 4.19.0 · Tailwind 4.3.3 |
-| RPC | oRPC | **1.15.0** — stable v1; v2 is beta, do not use |
-| Data | TanStack Query + `@orpc/tanstack-query` | 5.102.8 / 1.15.0 |
-| ORM *(Phase 2)* | Prisma | **7.10.0** |
-| DB *(Phase 2)* | Neon + `@prisma/adapter-neon` | 7.10.0 |
-| Auth *(Phase 2)* | Better Auth | 1.7.2 |
-| Validation | Zod | 4.5.4 |
-| Dates | date-fns + date-fns-tz | 4.4.0 |
+| Concern          | Choice                                  | Version                                        |
+| ---------------- | --------------------------------------- | ---------------------------------------------- |
+| Monorepo         | pnpm workspaces + Turborepo             | turbo 2.10.12                                  |
+| App              | Next.js App Router                      | 16.3.3 (React 19.2.8)                          |
+| UI               | shadcn/ui + Tailwind                    | CLI 4.19.0 · Tailwind 4.3.3                    |
+| RPC              | oRPC                                    | **1.15.0** — stable v1; v2 is beta, do not use |
+| Data             | TanStack Query + `@orpc/tanstack-query` | 5.102.8 / 1.15.0                               |
+| ORM _(Phase 2)_  | Prisma                                  | **7.10.0**                                     |
+| DB _(Phase 2)_   | Neon + `@prisma/adapter-neon`           | 7.10.0                                         |
+| Auth _(Phase 2)_ | Better Auth                             | 1.7.2                                          |
+| Validation       | Zod                                     | 4.5.4                                          |
+| Dates            | date-fns + date-fns-tz                  | 4.4.0                                          |
 
 **Why Prisma 7.10.0 and not 8.** npm's `latest` tag currently points at `prisma@8.0.0-rc.12` — a release candidate — and `@prisma/adapter-neon` has no 8.x stable at all. Pin 7.10.0 across `prisma`, `@prisma/client`, and the adapter.
 
@@ -278,7 +281,7 @@ What actually provides the guarantee:
 
 1. **The frontend physically cannot reach the database.** `@lifedesk/db` is never a dependency of `apps/web`, and an ESLint boundary rule fails the build if anyone adds it. Prisma is importable only inside `packages/api/src/repos/prisma`.
 2. **Every procedure descends from `protectedProcedure`**, which resolves the session in middleware and injects `ctx.userId`. There is no base procedure handing out a data client without a user attached.
-3. **Every query filters by `userId`** — authorization, not just authentication. This is where real apps leak: an authenticated user requesting *someone else's* task id.
+3. **Every query filters by `userId`** — authorization, not just authentication. This is where real apps leak: an authenticated user requesting _someone else's_ task id.
 4. **Zod validates every input** before a handler runs.
 5. **Rate limiting** on the RPC route handler.
 6. **Genuinely server-only procedures** (maintenance, cron, admin) live in a separate router never mounted on the HTTP handler — reachable only via the server-side client from RSC. That's the one tier a browser truly cannot touch.
@@ -376,10 +379,10 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 
 ## 8. Roadmap & progress
 
-### Phase 1 — functional UI on mock data *(demoable)*
+### Phase 1 — functional UI on mock data _(demoable)_
 
 - [x] 1. **Scaffold** — pnpm workspace, Turborepo, `tooling/*`, pinned versions
-- [x] 1.5. **`.claude/` pass A** — root `CLAUDE.md`, `settings.json`, and the prescriptive rules (see §9). Written *before* the code so they steer it
+- [x] 1.5. **`.claude/` pass A** — root `CLAUDE.md`, `settings.json`, and the prescriptive rules (see §9). Written _before_ the code so they steer it
 - [x] 2. **`packages/ui`** — shadcn init `--monorepo`, Tailwind v4, tokens, fonts, dark mode, base components. `components.json` in both `apps/web` and `packages/ui` with matching `style` / `iconLibrary` / `baseColor`
 - [x] 3. **`packages/contracts`** — Zod schemas for every Phase 1 entity
 - [x] 4. **`packages/core`** — time and capacity math, with unit tests
@@ -397,20 +400,21 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 - [ ] 15. **Demo pass** — live in it on fixtures for a few days, fix what annoys
 
 **Carried into the demo pass** (built, but knowingly thin):
+
 - Project detail page — projects are created and listed from the area page; there is no `/projects/[id]` yet
 - Tags exist end-to-end in the API but have no UI beyond the data model
 - Manual session entry and session editing — the API and the runaway-review flow are done; the "add a session by hand" form is not
 - Day intention line — designed in §4.7, not yet built
 - PWA raster icons (192/512 PNG); only the SVG ships
 
-### Phase 2 — real backend *(no frontend changes)*
+### Phase 2 — real backend _(no frontend changes)_
 
 - [ ] 16. `packages/db` — Prisma 7 schema, `prisma.config.ts`, Neon adapter, generator output inside the package, initial migration, seed
 - [ ] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
 - [ ] 18. Better Auth replacing the stub — email+password, Google, onboarding that seeds default areas and settings
 - [ ] 19. Rate limiting, error monitoring, deploy
 
-### Phase 1.5 — time blocking and timelines *(shipped)*
+### Phase 1.5 — time blocking and timelines _(shipped)_
 
 - [x] `plannedStartMin` / `plannedEndMin` on Task, `task.setPlannedTime`
 - [x] `packages/core/schedule` — lane packing for overlaps, visible-hour window
@@ -436,7 +440,6 @@ routine blocks, drag-and-drop, blocks crossing midnight.
 
 ### Phase 4 — polish and reach
 
-- [ ] Drag-and-drop everywhere
 - [ ] Habits & streaks
 - [ ] Project templates
 - [ ] Google Calendar read-only overlay
@@ -454,50 +457,50 @@ Guidance followed: **layer, don't centralize**, with **progressive disclosure** 
 
 Two passes, because the rules split into two kinds:
 
-- **Pass A — prescriptive rules, written *before* any code (step 1.5).** These are decisions already made in this document — file organization, design tokens, timezone handling, the data-access boundary. Writing them first is the point: they steer the build instead of being retrofitted onto it.
+- **Pass A — prescriptive rules, written _before_ any code (step 1.5).** These are decisions already made in this document — file organization, design tokens, timezone handling, the data-access boundary. Writing them first is the point: they steer the build instead of being retrofitted onto it.
 - **Pass B — descriptive rules, written after the first vertical slice (after step 6).** These describe patterns that must exist before they can be documented honestly — the exact shape of an oRPC procedure, the `add-feature` walkthrough, the review checklist. Written against real files, with real paths.
 
-| Artifact | Pass |
-|---|---|
-| Artifact | Pass | Status |
-|---|---|---|
-| Root `CLAUDE.md` | A | ✅ |
-| `.claude/settings.json` — permissions | A | ✅ |
-| `.claude/settings.json` — hooks | A | ⏳ after step 1 (a Stop hook running `typecheck` fails on an empty repo) |
-| `rules/file-organization.md` | A | ✅ |
-| `rules/design-tokens.md` | A | ✅ |
-| `rules/dates-and-timezones.md` | A | ✅ |
-| `rules/data-access.md` | A | ✅ |
-| `rules/ui-components.md` | A | ✅ |
-| `skills/add-feature` | A | ✅ |
-| `skills/review-checklist` | A | ✅ |
-| `apps/web/CLAUDE.md`, `packages/api/CLAUDE.md` | B | — |
-| `rules/orpc-procedures.md` | B | — |
-| `skills/add-procedure`, `skills/add-shadcn-component` | B | — |
-| `packages/db/CLAUDE.md`, `skills/db-migrate` | Phase 2 | — |
+| Artifact                                              | Pass    |
+| ----------------------------------------------------- | ------- |
+| Artifact                                              | Pass    | Status                                                                   |
+| ---                                                   | ---     | ---                                                                      |
+| Root `CLAUDE.md`                                      | A       | ✅                                                                       |
+| `.claude/settings.json` — permissions                 | A       | ✅                                                                       |
+| `.claude/settings.json` — hooks                       | A       | ⏳ after step 1 (a Stop hook running `typecheck` fails on an empty repo) |
+| `rules/file-organization.md`                          | A       | ✅                                                                       |
+| `rules/design-tokens.md`                              | A       | ✅                                                                       |
+| `rules/dates-and-timezones.md`                        | A       | ✅                                                                       |
+| `rules/data-access.md`                                | A       | ✅                                                                       |
+| `rules/ui-components.md`                              | A       | ✅                                                                       |
+| `skills/add-feature`                                  | A       | ✅                                                                       |
+| `skills/review-checklist`                             | A       | ✅                                                                       |
+| `apps/web/CLAUDE.md`, `packages/api/CLAUDE.md`        | B       | —                                                                        |
+| `rules/orpc-procedures.md`                            | B       | —                                                                        |
+| `skills/add-procedure`, `skills/add-shadcn-component` | B       | —                                                                        |
+| `packages/db/CLAUDE.md`, `skills/db-migrate`          | Phase 2 | —                                                                        |
 
 ### `CLAUDE.md` files (root under ~100 lines)
 
 - **Root** — stack with pinned versions, exact commands, layout, the handful of hard rules, an Always / Ask First / Never boundary list, and a pointer to this file
 - **`apps/web/`** — component and hook conventions, server/client boundary, responsive rules
 - **`packages/api/`** — procedure conventions, the auth rules in §6.2, repository pattern
-- **`packages/db/`** — schema and migration rules *(Phase 2)*
+- **`packages/db/`** — schema and migration rules _(Phase 2)_
 
 ### `.claude/rules/` (loaded on reference)
 
-| File | Covers |
-|---|---|
-| `file-organization.md` | One component per file, colocated `constants`/`types`/`utils`, feature folders, named exports |
-| `orpc-procedures.md` | How to add a procedure; `protectedProcedure` always; every query filtered by `userId` |
-| `data-access.md` | Handlers talk to repositories, never Prisma directly; Prisma confined to `repos/prisma` |
-| `ui-components.md` | shadcn usage, `packages/ui` vs app-local, `"use client"` at the leaf, mobile-first breakpoints |
-| `design-tokens.md` | The palette and type scale in §4, and the two hard colour rules |
-| `dates-and-timezones.md` | UTC storage, conversion only through `packages/core/time`, never `new Date()` in a component |
+| File                     | Covers                                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `file-organization.md`   | One component per file, colocated `constants`/`types`/`utils`, feature folders, named exports  |
+| `orpc-procedures.md`     | How to add a procedure; `protectedProcedure` always; every query filtered by `userId`          |
+| `data-access.md`         | Handlers talk to repositories, never Prisma directly; Prisma confined to `repos/prisma`        |
+| `ui-components.md`       | shadcn usage, `packages/ui` vs app-local, `"use client"` at the leaf, mobile-first breakpoints |
+| `design-tokens.md`       | The palette and type scale in §4, and the two hard colour rules                                |
+| `dates-and-timezones.md` | UTC storage, conversion only through `packages/core/time`, never `new Date()` in a component   |
 
 ### `.claude/skills/`
 
 - **`add-feature`** — the vertical slice in order: contract → repo interface → memory repo → procedure → hook → component → test
-- **`add-procedure`**, **`add-shadcn-component`**, **`db-migrate`** *(Phase 2)*
+- **`add-procedure`**, **`add-shadcn-component`**, **`db-migrate`** _(Phase 2)_
 - **`review-checklist`** — ownership filters present, Zod on every input, no Prisma outside the repo layer, no `any`, mobile layout checked
 
 ### `.claude/settings.json`
@@ -517,7 +520,7 @@ pnpm install && pnpm dev
 Walkthrough — driven in a browser at desktop width **and at 390px**:
 
 1. Sign in via the stub → shell renders, rail on desktop, tab bar on mobile
-2. Create area *Research* → project *Paper* → task *Rerun ablations*, 2h, today
+2. Create area _Research_ → project _Paper_ → task _Rerun ablations_, 2h, today
 3. Day view shows it; capacity meter reflects 2h against the cap
 4. Start the timer → TimerBar turns `--focus` green, counts with tabular digits, no jitter
 5. **Navigate to Week and back** → still running, elapsed correct

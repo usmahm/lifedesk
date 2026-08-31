@@ -19,6 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { DurationField } from "@/components/fields/DurationField";
 import { useToday } from "@/features/settings/hooks/useToday";
 import { orpc } from "@/lib/orpc/client";
 
@@ -80,9 +81,6 @@ function TaskDetailForm({
   // Seeded once on mount; the parent's `key` handles switching tasks.
   const [title, setTitle] = useState(task.title);
   const [notes, setNotes] = useState(task.notes ?? "");
-  const [estimate, setEstimate] = useState(
-    task.estimateMin === null ? "" : String(task.estimateMin),
-  );
 
   const visibleProjects = projects.data?.filter(
     (project) => !task.areaId || project.areaId === task.areaId || project.id === task.projectId,
@@ -163,21 +161,12 @@ function TaskDetailForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="task-estimate">Estimate (minutes)</Label>
-            <Input
+            <Label htmlFor="task-estimate">Estimate</Label>
+            <DurationField
               id="task-estimate"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={estimate}
-              onChange={(event) => setEstimate(event.target.value)}
-              onBlur={() => {
-                const parsed = estimate === "" ? null : Number(estimate);
-                if (parsed !== task.estimateMin && (parsed === null || parsed > 0)) {
-                  update.mutate({ id: task.id, estimateMin: parsed });
-                }
-              }}
-              className="tabular-nums"
+              value={task.estimateMin}
+              minMinutes={0}
+              onChange={(estimateMin) => update.mutate({ id: task.id, estimateMin })}
             />
           </div>
 

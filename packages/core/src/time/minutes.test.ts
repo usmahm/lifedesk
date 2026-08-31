@@ -4,9 +4,11 @@ import {
   clampMinuteOfDay,
   formatMinuteOfDay,
   hoursInWindow,
+  joinMinutes,
   minuteToOffsetPct,
   parseMinuteOfDay,
   spanToHeightPct,
+  splitMinutes,
   toClockTime,
 } from "./minutes";
 
@@ -74,6 +76,43 @@ describe("clampMinuteOfDay", () => {
 
   it("survives NaN", () => {
     expect(clampMinuteOfDay(Number.NaN)).toBe(0);
+  });
+});
+
+describe("splitMinutes / joinMinutes", () => {
+  it("splits at the boundaries that actually catch people out", () => {
+    expect(splitMinutes(0)).toEqual({ hours: 0, minutes: 0 });
+    expect(splitMinutes(59)).toEqual({ hours: 0, minutes: 59 });
+    expect(splitMinutes(60)).toEqual({ hours: 1, minutes: 0 });
+    expect(splitMinutes(90)).toEqual({ hours: 1, minutes: 30 });
+    expect(splitMinutes(135)).toEqual({ hours: 2, minutes: 15 });
+    expect(splitMinutes(1439)).toEqual({ hours: 23, minutes: 59 });
+    // A full day is 24h 0m, never 0h.
+    expect(splitMinutes(1440)).toEqual({ hours: 24, minutes: 0 });
+  });
+
+  it("clamps rather than producing negative parts", () => {
+    expect(splitMinutes(-30)).toEqual({ hours: 0, minutes: 0 });
+    expect(joinMinutes(-1, -30)).toBe(0);
+  });
+
+  it("survives NaN from a half-typed field", () => {
+    expect(splitMinutes(Number.NaN)).toEqual({ hours: 0, minutes: 0 });
+    expect(joinMinutes(Number.NaN, 30)).toBe(30);
+    expect(joinMinutes(2, Number.NaN)).toBe(120);
+  });
+
+  it("joins minute overflow into the hour", () => {
+    // A segment can hand back 90 minutes mid-edit; it must not be lost.
+    expect(joinMinutes(1, 90)).toBe(150);
+    expect(splitMinutes(joinMinutes(1, 90))).toEqual({ hours: 2, minutes: 30 });
+  });
+
+  it("round-trips across the whole range", () => {
+    for (let total = 0; total <= 1440; total += 7) {
+      const { hours, minutes } = splitMinutes(total);
+      expect(joinMinutes(hours, minutes)).toBe(total);
+    }
   });
 });
 

@@ -1,72 +1,43 @@
 "use client";
 
 import type { TaskWithMeta } from "@lifedesk/contracts";
-import { formatMinuteOfDay, parseMinuteOfDay } from "@lifedesk/core/time";
 import { Button } from "@lifedesk/ui/components/button";
-import { Input } from "@lifedesk/ui/components/input";
 import { Label } from "@lifedesk/ui/components/label";
 import { X } from "lucide-react";
 import { useState } from "react";
 
-import { useSetTaskPlannedTime } from "../hooks/useTaskMutations";
+import { TimeField } from "@/components/fields/TimeField";
 import { If } from "@/components/If";
 
+import { DEFAULT_BLOCK_MINUTES, DEFAULT_BLOCK_START_MIN } from "../constants";
+import { useSetTaskPlannedTime } from "../hooks/useTaskMutations";
+
 /**
- * Blocking a task into a time range.
+ * Blocking a task into a time range on its scheduled day.
  *
- * This is the keyboard-accessible path to a block — clicking an empty slot on
- * the grid is a mouse convenience on top, not the only way in.
+ * The segments make a malformed time unrepresentable, so there is nothing to
+ * parse and no "use HH:MM" error to show — that whole class of failure is gone
+ * rather than handled. The only check left is a real rule rather than a
+ * formatting one: an end must come after its start.
  *
  * Only meaningful once the task has a day; without one there is nowhere to
  * draw the block, and the server refuses it.
  */
 export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
   const setPlannedTime = useSetTaskPlannedTime();
-
-  const [start, setStart] = useState(
-    task.plannedStartMin === null ? "" : formatMinuteOfDay(task.plannedStartMin),
-  );
-  const [end, setEnd] = useState(
-    task.plannedEndMin === null ? "" : formatMinuteOfDay(task.plannedEndMin),
-  );
   const [error, setError] = useState<string | null>(null);
 
   const hasDay = task.scheduledFor !== null;
   const isBlocked = task.plannedStartMin !== null;
 
-  function commit(nextStart: string, nextEnd: string): void {
-    if (nextStart === "" && nextEnd === "") {
-      setError(null);
-      if (isBlocked)
-        setPlannedTime.mutate({ id: task.id, plannedStartMin: null, plannedEndMin: null });
-      return;
-    }
-
-    const startMin = parseMinuteOfDay(nextStart);
-    const endMin = parseMinuteOfDay(nextEnd);
-
-    // Half-typed input is normal; say nothing until both sides are real.
-    if (startMin === null || endMin === null) {
-      setError(nextStart && nextEnd ? "Use HH:MM, like 09:00" : null);
-      return;
-    }
-
+  function commit(startMin: number, endMin: number): void {
     if (endMin <= startMin) {
       setError("End must be after start");
       return;
     }
 
     setError(null);
-    if (startMin === task.plannedStartMin && endMin === task.plannedEndMin) return;
-
     setPlannedTime.mutate({ id: task.id, plannedStartMin: startMin, plannedEndMin: endMin });
-  }
-
-  function clear(): void {
-    setStart("");
-    setEnd("");
-    setError(null);
-    setPlannedTime.mutate({ id: task.id, plannedStartMin: null, plannedEndMin: null });
   }
 
   return (
@@ -78,7 +49,10 @@ export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
             variant="ghost"
             size="sm"
             className="h-auto px-1 py-0 text-xs text-muted-foreground"
-            onClick={clear}
+            onClick={() => {
+              setError(null);
+              setPlannedTime.mutate({ id: task.id, plannedStartMin: null, plannedEndMin: null });
+            }}
           >
             <X className="size-3" />
             Clear
@@ -87,27 +61,23 @@ export function PlannedTimeFields({ task }: { task: TaskWithMeta }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Input
+        <TimeField
           id="task-planned-start"
-          value={start}
+          value={task.plannedStartMin}
           disabled={!hasDay}
-          placeholder="09:00"
-          inputMode="numeric"
-          aria-label="Planned start time"
-          onChange={(event) => setStart(event.target.value)}
-          onBlur={() => commit(start, end)}
-          className="tabular-nums"
+          onChange={(startMin) =>
+            // Blocking from nothing assumes an hour — a zero-length block is
+            // something the grid cannot draw.
+            commit(startMin, task.plannedEndMin ?? startMin + DEFAULT_BLOCK_MINUTES)
+          }
         />
+
         <span className="text-sm text-muted-foreground">to</span>
-        <Input
-          value={end}
+
+        <TimeField
+          value={task.plannedEndMin}
           disabled={!hasDay}
-          placeholder="12:00"
-          inputMode="numeric"
-          aria-label="Planned end time"
-          onChange={(event) => setEnd(event.target.value)}
-          onBlur={() => commit(start, end)}
-          className="tabular-nums"
+          onChange={(endMin) => commit(task.plannedStartMin ?? DEFAULT_BLOCK_START_MIN, endMin)}
         />
       </div>
 

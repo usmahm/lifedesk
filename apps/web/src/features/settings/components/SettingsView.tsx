@@ -15,10 +15,11 @@ import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { DurationField } from "@/components/fields/DurationField";
 import { ErrorState } from "@/components/ErrorState";
 import { orpc } from "@/lib/orpc/client";
 
-import { WEEK_START_OPTIONS } from "../constants";
+import { MIN_DAILY_CAPACITY_MIN, WEEK_START_OPTIONS } from "../constants";
 
 export function SettingsView() {
   const queryClient = useQueryClient();
@@ -109,25 +110,19 @@ export function SettingsView() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="capacity">Daily capacity (minutes)</Label>
-          {/* Uncontrolled and keyed to the server value: it saves on blur, so
-              there's nothing to hold in React state, and the key re-seeds it
-              if the value changes elsewhere. */}
-          <Input
-            key={settings.data.dailyCapacityMin}
+          <Label htmlFor="capacity">Daily capacity</Label>
+          <DurationField
             id="capacity"
-            type="number"
-            inputMode="numeric"
-            min={30}
-            max={1440}
-            defaultValue={settings.data.dailyCapacityMin}
-            onBlur={(event) => {
-              const parsed = Number(event.target.value);
-              if (parsed >= 30 && parsed <= 1440 && parsed !== settings.data.dailyCapacityMin) {
-                update.mutate({ dailyCapacityMin: parsed });
+            value={settings.data.dailyCapacityMin}
+            minMinutes={MIN_DAILY_CAPACITY_MIN}
+            clearable={false}
+            onChange={(minutes) => {
+              // The contract floors capacity at 30m; the field can't go below
+              // it, but a null would still be invalid.
+              if (minutes !== null && minutes >= MIN_DAILY_CAPACITY_MIN) {
+                update.mutate({ dailyCapacityMin: minutes });
               }
             }}
-            className="w-full tabular-nums sm:w-56"
           />
           <p className="text-xs text-muted-foreground">
             A soft cap. The meter goes amber past it — it never stops you.

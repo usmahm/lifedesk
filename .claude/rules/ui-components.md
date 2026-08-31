@@ -124,6 +124,33 @@ So if a conversion to `<If>` fails to compile, that is the answer, not an obstac
 
 The single hole is a `!` assertion inside an `<If>` — it typechecks and then crashes. An ESLint rule in `tooling/eslint-config/next.js` catches it.
 
+## Time and duration inputs
+
+**Never a bare number input for minutes.** "Time is shown, never calculated" applies to input as much as display — nobody should work out that two and a quarter hours is `135`.
+
+| Asking for                                            | Use             | Value                      |
+| ----------------------------------------------------- | --------------- | -------------------------- |
+| A length — estimate, capacity, Pomodoro               | `DurationField` | minutes, `null` when unset |
+| A point in the day — planned start/end, session times | `TimeField`     | minute of day, 24-hour     |
+
+Both are in `apps/web/src/components/fields/`, composed of two pieces:
+
+- **`StepperSegment`** — one part (hours, or minutes). Bare inline text, no chrome of its own. Handles typed digits, arrow keys (`⇧` for the big step), a vertical drag and the wheel. A stepper that is _only_ arrows takes fifteen clicks to reach two hours, so clicking must never be the only path.
+- **`SegmentedField`** — the bordered shell around them, plus one ▲▼ spinner at the right edge. It mirrors `Input`'s height, radius, border and focus ring, so a segmented field is indistinguishable from a text input in a row.
+
+**Chrome belongs to the shell, never the segment.** The first version gave every segment its own filled box and its own stacked arrows, which stood ~92px tall against a 36px input and broke the two-column grid in `TaskDetailSheet`. If a field starts looking heavy again, that is the regression.
+
+Four things to preserve if you touch it:
+
+- **The wheel only steps while the segment is focused.** Otherwise it eats page scroll the moment the pointer crosses it. It needs a manual non-passive listener, because React's synthetic `onWheel` is passive and `preventDefault` there silently does nothing.
+- **The digit rules live in `digit-entry.ts` as a pure function.** `"6"` in a 0–59 segment can only mean 6; a pause mid-number starts fresh. Change them there, not in the component.
+- **The spinner buttons `preventDefault` on mousedown.** Without it the button takes focus off the segment, the ring disappears and the next click drives the wrong part.
+- **The segment's 44px touch target is a pseudo-element, not its height.** Growing the box would break row alignment, which is the whole point of the shell.
+
+The shell's spinner says only "up" or "down" via `StepperSegmentHandle.step`; the segment applies its own wrap, clamp and step. Don't re-derive those rules in the shell — they drift.
+
+Because segments make a malformed value unrepresentable, callers validate _rules_ only — an end after its start — never format. If you find yourself parsing `"HH:MM"` in a component, something has gone backwards.
+
 ## Forms
 
 `react-hook-form` with a `zodResolver` pointing at the schema from `@lifedesk/contracts` — the same schema the server enforces, so client and server can't drift.
