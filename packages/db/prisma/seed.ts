@@ -15,16 +15,54 @@ import { prisma } from "../src/index";
  * fixtures.ts`, which stays behind to back the test suite. Sharing them would
  * mean packages/db depending on packages/api, which is backwards.
  *
- * Idempotent: it deletes the dev user first, and every table cascades from
- * there, so re-running gives the same result rather than duplicates.
+ * Attaches its data to an account that already exists, found by email:
+ *
+ *     SEED_EMAIL=you@example.com pnpm --filter @lifedesk/db seed
+ *
+ * It deliberately does not create the account. Since Better Auth landed, a
+ * user row without a credential record is one nobody can sign in as — the old
+ * fixed dev user was exactly that, and useless the moment real auth arrived.
+ * Sign up through the app first, then run this.
+ *
+ * Idempotent: it clears that user's existing planning data first, so
+ * re-running replaces rather than duplicates. It never touches the account
+ * itself, so you stay signed in.
  */
 
-/** Matches the auth stub, so the app keeps working until Better Auth lands. */
-const DEV_USER_ID = "00000000-0000-4000-8000-000000000001";
 const TZ = "Europe/London";
 const WEEK_STARTS_ON = 1;
 
+async function resolveUser(): Promise<{ id: string; email: string }> {
+  const email = process.env.SEED_EMAIL;
+  if (!email) {
+    throw new Error(
+      "SEED_EMAIL is not set. Sign up in the app, then run:\n" +
+        "  SEED_EMAIL=you@example.com pnpm --filter @lifedesk/db seed",
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true },
+  });
+  if (!user) {
+    throw new Error(`No account found for ${email}. Sign up in the app first.`);
+  }
+  return user;
+}
+
+/** Everything this user owns, in an order foreign keys allow. */
+async function clearPlanningData(userId: string): Promise<void> {
+  await prisma.timeSession.deleteMany({ where: { userId } });
+  await prisma.task.deleteMany({ where: { userId } });
+  await prisma.project.deleteMany({ where: { userId } });
+  await prisma.area.deleteMany({ where: { userId } });
+  await prisma.tag.deleteMany({ where: { userId } });
+}
+
 async function main(): Promise<void> {
+  const user = await resolveUser();
+  const { id: userId } = user;
   const now = new Date();
   const today = todayIn(TZ, now);
   const weekStart = startOfWeek(today, WEEK_STARTS_ON);
@@ -32,16 +70,14 @@ async function main(): Promise<void> {
   const at = (d: string, time: `${number}:${number}`) =>
     instantAt(d as Parameters<typeof instantAt>[0], time, TZ);
 
-  await prisma.user.deleteMany({ where: { id: DEV_USER_ID } });
+  await clearPlanningData(userId);
 
-  await prisma.user.create({
-    data: {
-      id: DEV_USER_ID,
-      name: "Ahmad",
-      email: "ahmad@lifedesk.local",
-      emailVerified: true,
-      settings: { create: { timezone: TZ, weekStartsOn: WEEK_STARTS_ON } },
-    },
+  // Onboarding already created a settings row; keep it in step with the
+  // timezone these fixtures are built around.
+  await prisma.userSettings.upsert({
+    where: { userId: userId },
+    create: { userId: userId, timezone: TZ, weekStartsOn: WEEK_STARTS_ON },
+    update: { timezone: TZ, weekStartsOn: WEEK_STARTS_ON },
   });
 
   const areas = await Promise.all(
@@ -55,7 +91,7 @@ async function main(): Promise<void> {
       ] as const
     ).map(([name, color, icon], sortOrder) =>
       prisma.area.create({
-        data: { userId: DEV_USER_ID, name, color, icon, sortOrder },
+        data: { userId: userId, name, color, icon, sortOrder },
       }),
     ),
   );
@@ -63,7 +99,7 @@ async function main(): Promise<void> {
 
   const paper = await prisma.project.create({
     data: {
-      userId: DEV_USER_ID,
+      userId: userId,
       areaId: research!.id,
       name: "Ablation paper",
       description: "Submission draft — results in, writing behind.",
@@ -75,7 +111,7 @@ async function main(): Promise<void> {
 
   const migration = await prisma.project.create({
     data: {
-      userId: DEV_USER_ID,
+      userId: userId,
       areaId: work!.id,
       name: "Billing migration",
       description: "Move the legacy billing job off cron.",
@@ -91,13 +127,13 @@ async function main(): Promise<void> {
         ["admin", "slate"],
         ["reading", "amber"],
       ] as const
-    ).map(([name, color]) => prisma.tag.create({ data: { userId: DEV_USER_ID, name, color } })),
+    ).map(([name, color]) => prisma.tag.create({ data: { userId: userId, name, color } })),
   );
 
   // Today: blocked morning, two overlapping research tasks, one already done.
   const rerun = await prisma.task.create({
     data: {
-      userId: DEV_USER_ID,
+      userId: userId,
       areaId: research!.id,
       projectId: paper.id,
       title: "Rerun ablations with the corrected split",
@@ -113,7 +149,7 @@ async function main(): Promise<void> {
 
   await prisma.task.create({
     data: {
-      userId: DEV_USER_ID,
+      userId: userId,
       areaId: research!.id,
       projectId: paper.id,
       title: "Read Chen et al. on contrastive pretraining",
@@ -129,7 +165,7 @@ async function main(): Promise<void> {
 
   await prisma.task.create({
     data: {
-      userId: DEV_USER_ID,
+      userId: userId,
       areaId: work!.id,
       projectId: migration.id,
       title: "Reply to Sam about the migration window",
@@ -143,7 +179,7 @@ async function main(): Promise<void> {
 
   await prisma.task.create({
     data: {
-      userId: DEV_USER_ID,
+      userId: userId,
       areaId: health!.id,
       title: "Swim",
       estimateMin: 45,
@@ -159,7 +195,7 @@ async function main(): Promise<void> {
   await prisma.task.createMany({
     data: [
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: research!.id,
         projectId: paper.id,
         title: "Draft the related work section",
@@ -170,7 +206,7 @@ async function main(): Promise<void> {
         sortOrder: 0,
       },
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: work!.id,
         projectId: migration.id,
         title: "Pair with Dami on the cutover script",
@@ -179,7 +215,7 @@ async function main(): Promise<void> {
         sortOrder: 1,
       },
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: learning!.id,
         title: "Finish the Postgres indexing chapter",
         estimateMin: 60,
@@ -187,7 +223,7 @@ async function main(): Promise<void> {
         sortOrder: 0,
       },
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: admin!.id,
         title: "Submit the conference travel claim",
         estimateMin: 20,
@@ -203,16 +239,16 @@ async function main(): Promise<void> {
   await prisma.task.createMany({
     data: [
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: research!.id,
         title:
           "Work out whether the variance in run 4 is a seeding problem or something wrong with the eval harness itself",
         sortOrder: 0,
       },
-      { userId: DEV_USER_ID, title: "Book dentist", estimateMin: 10, sortOrder: 1 },
-      { userId: DEV_USER_ID, areaId: admin!.id, title: "Renew domain", sortOrder: 2 },
+      { userId: userId, title: "Book dentist", estimateMin: 10, sortOrder: 1 },
+      { userId: userId, areaId: admin!.id, title: "Renew domain", sortOrder: 2 },
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: learning!.id,
         title: "Look into whether pgvector is worth it here",
         estimateMin: 30,
@@ -226,7 +262,7 @@ async function main(): Promise<void> {
   await prisma.timeSession.createMany({
     data: [
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         taskId: rerun.id,
         projectId: paper.id,
         areaId: research!.id,
@@ -236,7 +272,7 @@ async function main(): Promise<void> {
         source: "timer",
       },
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         projectId: migration.id,
         areaId: work!.id,
         startedAt: at(today, "11:05"),
@@ -249,7 +285,7 @@ async function main(): Promise<void> {
         const d = addDays(weekStart, offset);
         return [
           {
-            userId: DEV_USER_ID,
+            userId: userId,
             areaId: research!.id,
             projectId: paper.id,
             startedAt: at(d, "09:30"),
@@ -258,7 +294,7 @@ async function main(): Promise<void> {
             source: "timer" as const,
           },
           {
-            userId: DEV_USER_ID,
+            userId: userId,
             areaId: work!.id,
             startedAt: at(d, "14:00"),
             endedAt: at(d, "16:20"),
@@ -269,7 +305,7 @@ async function main(): Promise<void> {
       }),
       // A timer left running overnight — exercises the runaway review banner.
       {
-        userId: DEV_USER_ID,
+        userId: userId,
         areaId: learning!.id,
         startedAt: at(day(-2), "22:40"),
         endedAt: at(day(-1), "08:10"),
@@ -281,13 +317,13 @@ async function main(): Promise<void> {
   });
 
   const counts = {
-    areas: await prisma.area.count({ where: { userId: DEV_USER_ID } }),
-    projects: await prisma.project.count({ where: { userId: DEV_USER_ID } }),
-    tasks: await prisma.task.count({ where: { userId: DEV_USER_ID } }),
-    tags: await prisma.tag.count({ where: { userId: DEV_USER_ID } }),
-    sessions: await prisma.timeSession.count({ where: { userId: DEV_USER_ID } }),
+    areas: await prisma.area.count({ where: { userId: userId } }),
+    projects: await prisma.project.count({ where: { userId: userId } }),
+    tasks: await prisma.task.count({ where: { userId: userId } }),
+    tags: await prisma.tag.count({ where: { userId: userId } }),
+    sessions: await prisma.timeSession.count({ where: { userId: userId } }),
   };
-  console.log("Seeded:", counts);
+  console.log(`Seeded ${user.email}:`, counts);
 }
 
 await main();

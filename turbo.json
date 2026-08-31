@@ -2,7 +2,13 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalDependencies": ["**/.env.*local", "tsconfig.json"],
-  "globalEnv": ["NODE_ENV", "LIFEDESK_REPOS"],
+  "globalEnv": [
+    "NODE_ENV",
+    "LIFEDESK_REPOS",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "SEED_EMAIL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

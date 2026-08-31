@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-08-31 (Phase 2 steps 16–17 — running on Neon Postgres)
+> Last updated: 2026-08-31 (Phase 2 steps 16–18 — Neon Postgres, real auth)
 
 ---
 
@@ -76,7 +76,7 @@ The in-memory repos hold module-level maps seeded with realistic fixtures — a 
 Two constraints that keep that promise honest:
 
 - **Repository interfaces stay Prisma-shaped** — cursor pagination, filters as objects, no methods only an in-memory store could implement cheaply. Otherwise the interface quietly encodes assumptions Postgres can't honour.
-- **Auth in Phase 1** is a dev-only session stub satisfying the same middleware contract (`ctx.userId` from a cookie). Sign-in/sign-up screens are built for real against it; Better Auth lands in Phase 2 with the database.
+- **Auth in Phase 1** was a dev-only session stub satisfying the same middleware contract (`ctx.userId` from a cookie). ✅ Replaced by Better Auth in step 18 — `page.tsx`, the app layout, the RPC route handler and the RSC oRPC client all call `getUserId()`/`isSignedIn()` and **none of them changed**. The stub's contract was the thing that made that true.
 
 ---
 
@@ -405,8 +405,14 @@ Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekRevi
 
 - [x] 16. `packages/db` — Prisma 7 schema, `prisma.config.ts`, Neon adapter, generator output inside the package, initial migration, seed
 - [x] 17. `packages/api/src/repos/prisma/*` against the same interfaces; flip the factory
-- [ ] 18. Better Auth replacing the stub — email+password, Google, onboarding that seeds default areas and settings
+- [x] 18. Better Auth replacing the stub — **email+password only**; Google deferred until it's wanted. Onboarding seeds settings and five default areas inside the user-create hook
 - [ ] 19. Rate limiting, error monitoring, deploy
+
+**Running the demo fixtures.** Since real auth landed, the seed attaches its data to an account that already exists rather than inventing one — a user row with no credential record is one nobody can sign in as. Sign up in the app, then:
+
+```bash
+SEED_EMAIL=you@example.com pnpm --filter @lifedesk/db seed
+```
 
 ### Phase 2.5 — Phase 1 loose ends _(after the swap)_
 

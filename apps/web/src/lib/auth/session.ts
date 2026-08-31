@@ -1,31 +1,26 @@
 import "server-only";
 
-import { DEV_USER, DEV_USER_ID } from "@lifedesk/api";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
+
+import { auth } from "./server";
 
 /**
- * Phase 1 session stub.
+ * Reading the current session on the server.
  *
- * Satisfies the same contract Better Auth will in Phase 2: something resolves
- * a user id from the request, and everything downstream sees `ctx.userId`.
- * The sign-in screens are built for real against this, so swapping in Better
- * Auth touches this file and nothing else.
- *
- * This is NOT authentication. It is a cookie holding a fixed dev user id, and
- * it must be gone before anyone other than the author uses the app.
- * See docs/PLAN.md §3.
+ * The same three functions the Phase 1 stub exposed, with the same signatures —
+ * `page.tsx`, the app layout, the RPC route handler and the RSC oRPC client all
+ * call these and none of them changed when real auth landed. That was the point
+ * of the stub satisfying this contract from day one.
  */
 
-export const SESSION_COOKIE = "lifedesk_dev_session";
-
 export async function getUserId(): Promise<string | null> {
-  const store = await cookies();
-  return store.get(SESSION_COOKIE)?.value ?? null;
+  const session = await auth.api.getSession({ headers: await headers() });
+  return session?.user.id ?? null;
 }
 
 export async function getCurrentUser() {
-  const userId = await getUserId();
-  return userId === DEV_USER_ID ? DEV_USER : null;
+  const session = await auth.api.getSession({ headers: await headers() });
+  return session?.user ?? null;
 }
 
 export async function isSignedIn(): Promise<boolean> {

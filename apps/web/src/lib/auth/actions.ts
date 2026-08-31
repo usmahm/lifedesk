@@ -1,38 +1,29 @@
 "use server";
 
-import { DEV_USER_ID } from "@lifedesk/api";
 import { signInInput, signUpInput } from "@lifedesk/contracts";
-import { cookies } from "next/headers";
+import { APIError } from "better-auth/api";
 import { redirect } from "next/navigation";
 
-import { SESSION_COOKIE } from "./session";
+import { auth } from "./server";
 
 /**
- * Phase 1 auth actions.
+ * Sign in, sign up, sign out.
  *
- * The forms, validation, and error surfaces are real — only the credential
- * check is stubbed. Phase 2 replaces the bodies with Better Auth calls and
- * leaves the screens untouched.
+ * Better Auth writes the session cookie from inside these calls, via the
+ * `nextCookies()` plugin composed in `./server`. Without that the call would
+ * succeed and the cookie would never reach the browser.
+ *
+ * Errors are deliberately not passed through verbatim. "No user found with
+ * this email" tells an attacker which addresses are registered, so both
+ * failures read the same. Everything that is not an APIError rethrows, because
+ * a database being down should surface as an error, not as bad credentials.
  */
-
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 export type AuthFormState = { error: string | null };
 
-async function startSession(): Promise<void> {
-  const store = await cookies();
-  store.set(SESSION_COOKIE, DEV_USER_ID, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
-}
+const CREDENTIALS_REJECTED = "Email or password is incorrect.";
 
-export async function signIn(
-  _previous: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
+export async function signIn(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = signInInput.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -42,15 +33,17 @@ export async function signIn(
     return { error: parsed.error.issues[0]?.message ?? "Check your details and try again." };
   }
 
-  // Phase 2: verify the credentials. Any email works for now.
-  await startSession();
+  try {
+    await auth.api.signInEmail({ body: parsed.data });
+  } catch (error) {
+    if (error instanceof APIError) return { error: CREDENTIALS_REJECTED };
+    throw error;
+  }
+
   redirect("/today");
 }
 
-export async function signUp(
-  _previous: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
+export async function signUp(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = signUpInput.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -61,12 +54,27 @@ export async function signUp(
     return { error: parsed.error.issues[0]?.message ?? "Check your details and try again." };
   }
 
-  await startSession();
+  try {
+    await auth.api.signUpEmail({ body: parsed.data });
+  } catch (error) {
+    if (error instanceof APIError) {
+      // The one case worth naming: it is the user's own address, so saying so
+      // leaks nothing they don't already know, and "incorrect" would be wrong.
+      const alreadyExists = error.body?.code === "USER_ALREADY_EXISTS";
+      return {
+        error: alreadyExists
+          ? "An account with that email already exists."
+          : "Could not create the account. Check your details and try again.",
+      };
+    }
+    throw error;
+  }
+
   redirect("/today");
 }
 
 export async function signOut(): Promise<void> {
-  const store = await cookies();
-  store.delete(SESSION_COOKIE);
+  const { headers } = await import("next/headers");
+  await auth.api.signOut({ headers: await headers() });
   redirect("/sign-in");
 }

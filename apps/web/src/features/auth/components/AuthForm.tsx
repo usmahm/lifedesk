@@ -12,9 +12,9 @@ import type { AuthFormState } from "@/lib/auth/actions";
 /**
  * Sign in and sign up.
  *
- * The form, its validation, and its error surface are real. Only the
- * credential check is stubbed in Phase 1 — Better Auth replaces the action
- * body and leaves this component untouched. See docs/PLAN.md §3.
+ * Backed by Better Auth. This component was written against the Phase 1 stub
+ * and did not change when real auth landed — the action signature was the
+ * contract, and it held.
  */
 export function AuthForm({
   mode,
@@ -93,9 +93,11 @@ export function AuthForm({
         </Link>
       </p>
 
-      <p className="mt-8 text-xs text-muted-foreground">
-        Phase 1 preview — any email and an 8-character password will get you in.
-      </p>
+      <If condition={isSignUp}>
+        <p className="mt-8 text-xs text-muted-foreground">
+          At least 8 characters. Your account starts with a few areas you can rename.
+        </p>
+      </If>
     </div>
   );
 }

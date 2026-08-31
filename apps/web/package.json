@@ -20,6 +20,7 @@
     "@orpc/server": "catalog:",
     "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
+    "better-auth": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "lucide-react": "catalog:",

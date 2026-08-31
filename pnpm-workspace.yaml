@@ -53,6 +53,9 @@ catalog:
   "@prisma/adapter-neon": 7.10.0
   "@neondatabase/serverless": 1.1.0
   tsx: 4.23.13
+
+  # --- auth ---
+  better-auth: 1.7.2
   dotenv: 17.4.2
 
   # --- tooling ---
