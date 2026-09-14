@@ -12,3 +12,6 @@ export const HOUR_BIG_STEP = 1;
 
 /** Ceiling for a duration's hours segment. Nothing here is planned in days. */
 export const MAX_DURATION_HOURS = 23;
+
+/** Coalesces a held arrow key into one write. Typing and dragging commit once anyway. */
+export const COMMIT_DEBOUNCE_MS = 300;

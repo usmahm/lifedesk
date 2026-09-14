@@ -8,8 +8,14 @@ import { useRef, useState } from "react";
 
 import { If } from "@/components/If";
 
-import { HOUR_BIG_STEP, MAX_DURATION_HOURS, MINUTE_BIG_STEP } from "./constants";
+import {
+  COMMIT_DEBOUNCE_MS,
+  HOUR_BIG_STEP,
+  MAX_DURATION_HOURS,
+  MINUTE_BIG_STEP,
+} from "./constants";
 import { SegmentedField } from "./SegmentedField";
+import { useDeferredCommit } from "./useDeferredCommit";
 import { StepperSegment } from "./StepperSegment";
 
 import type { StepperSegmentHandle } from "./types";
@@ -43,21 +49,35 @@ export function DurationField({
   id?: string;
 }) {
   const [draft, setDraft] = useState<number | null>(null);
+  // Mirrors `draft` so `commit` can read the value set moments earlier in
+  // the same handler. StepperSegment calls onChange and onCommit in one
+  // synchronous tick, and `draft` there is still the previous render's —
+  // which silently persisted "1" when you typed "10".
+  const draftRef = useRef<number | null>(null);
   const hoursRef = useRef<StepperSegmentHandle>(null);
   const minutesRef = useRef<StepperSegmentHandle>(null);
   const [active, setActive] = useState<"hours" | "minutes">("hours");
+  const { schedule, flush } = useDeferredCommit(COMMIT_DEBOUNCE_MS);
 
   const current = draft ?? value;
   const parts = current === null ? null : splitMinutes(current);
 
   function set(hours: number, minutes: number): void {
-    setDraft(Math.max(minMinutes, joinMinutes(hours, minutes)));
+    const next = Math.max(minMinutes, joinMinutes(hours, minutes));
+    draftRef.current = next;
+    setDraft(next);
   }
 
   function commit(): void {
-    if (draft === null) return;
-    setDraft(null);
-    if (draft !== value) onChange(draft);
+    const next = draftRef.current;
+    if (next === null || next === value) return;
+    // The draft stays until the write fires, so the field never flashes
+    // back to the old value while a debounced commit is in flight.
+    schedule(() => {
+      draftRef.current = null;
+      setDraft(null);
+      onChange(next);
+    });
   }
 
   return (
@@ -118,6 +138,9 @@ export function DurationField({
             "md:opacity-0 md:group-focus-within/duration:opacity-100 md:group-hover/duration:opacity-100",
           )}
           onClick={() => {
+            draftRef.current = null;
+            // Drop any in-flight debounced write; clearing wins.
+            flush();
             setDraft(null);
             onChange(null);
           }}

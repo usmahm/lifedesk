@@ -3,8 +3,9 @@
 import { joinMinutes, splitMinutes } from "@lifedesk/core/time";
 import { useRef, useState } from "react";
 
-import { MINUTE_BIG_STEP } from "./constants";
+import { COMMIT_DEBOUNCE_MS, MINUTE_BIG_STEP } from "./constants";
 import { SegmentedField } from "./SegmentedField";
+import { useDeferredCommit } from "./useDeferredCommit";
 import { StepperSegment } from "./StepperSegment";
 
 import type { StepperSegmentHandle } from "./types";
@@ -32,24 +33,36 @@ export function TimeField({
   id?: string;
 }) {
   const [draft, setDraft] = useState<number | null>(null);
+  // See DurationField: onChange and onCommit fire in one tick, so `draft`
+  // is a render behind by the time commit reads it. Typing "14" saved 01:00.
+  const draftRef = useRef<number | null>(null);
   const hoursRef = useRef<StepperSegmentHandle>(null);
   const minutesRef = useRef<StepperSegmentHandle>(null);
   // Which segment the shell's spinner drives. Survives blur, so clicking ▲
   // after tabbing away still moves the part you were last on.
   const [active, setActive] = useState<"hours" | "minutes">("hours");
+  const { schedule } = useDeferredCommit(COMMIT_DEBOUNCE_MS);
 
   const current = draft ?? value;
   const parts = current === null ? null : splitMinutes(current);
 
   function set(hours: number, minutes: number): void {
     // Hours wrap at 24, so 23 + 1 lands on 00 rather than sticking.
-    setDraft(joinMinutes(hours % 24, minutes));
+    const next = joinMinutes(hours % 24, minutes);
+    draftRef.current = next;
+    setDraft(next);
   }
 
   function commit(): void {
-    if (draft === null) return;
-    setDraft(null);
-    if (draft !== value) onChange(draft);
+    const next = draftRef.current;
+    if (next === null || next === value) return;
+    // The draft stays until the write fires, so the field never flashes
+    // back to the old value while a debounced commit is in flight.
+    schedule(() => {
+      draftRef.current = null;
+      setDraft(null);
+      onChange(next);
+    });
   }
 
   return (
