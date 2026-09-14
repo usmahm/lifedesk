@@ -5,9 +5,12 @@ import { Button } from "@lifedesk/ui/components/button";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { cn } from "@lifedesk/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { Square } from "lucide-react";
+import { Maximize2, Square } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
+import { If } from "@/components/If";
+import { FOCUS_ORIGIN_PARAM, FOCUS_PATH } from "@/features/focus/constants";
 import { orpc } from "@/lib/orpc/client";
 
 import { requestNotificationPermission } from "../lib/notify";
@@ -32,6 +35,8 @@ import { TimerModeToggle } from "./TimerModeToggle";
  * On mobile it sits directly above the tab bar.
  */
 export function TimerBar({ className }: { className?: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [mode, setMode] = useTimerMode();
   const running = useRunningSession();
   const stop = useStopTimer();
@@ -136,6 +141,20 @@ export function TimerBar({ className }: { className?: string }) {
             <p className="flex-1 text-sm text-muted-foreground">No session running</p>
           </>
         )}
+
+        {/* Only when there is something to focus on. A session with no task
+            has no title, notes or estimate — a Focus screen of three empty
+            panels is worse than no button. */}
+        <If condition={session?.taskId != null}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push(`${FOCUS_PATH}?${FOCUS_ORIGIN_PARAM}=${pathname}`)}
+          >
+            <Maximize2 className="size-3.5" />
+            <span className="max-sm:sr-only">Focus</span>
+          </Button>
+        </If>
 
         <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
           {/* Switching mid-phase would leave a session running under rules it

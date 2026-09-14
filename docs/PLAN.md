@@ -451,6 +451,10 @@ routine blocks, drag-and-drop, blocks crossing midnight.
 ### Phase 3 — the thing that teaches you
 
 - [ ] Recurring tasks
+- [x] **Focus mode** — `/focus`, a route outside `AppShell` so the rail, tab bar and timer bar are _absent_ rather than hidden. Shows the running session's task, the clock, editable notes, estimate vs tracked, and today's sessions on that task
+  - **Anchored to the running session only.** Focus and "what am I actually doing" cannot disagree, and the entry point appears only when that session has a task — a task-less one has no title, notes or estimate to show
+  - **Stays through a Pomodoro break.** Read strictly, "only the running session" would eject you to Today every 25 minutes mid-cycle; a break is the same bout of work. It exits on a manual stop or ticking the task off
+  - **Exit uses a `?from=` marker, not `window.history.length`**, which counts entries from before the app was loaded and cannot tell "came from Today" from "opened in a fresh tab"
 - [x] **Pomodoro + PiP floating timer** — work phases are ordinary sessions with `source: "pomodoro"`; breaks and the cycle count live in `localStorage`. Nothing auto-starts, but phases auto-_end_, so a 25-minute pomodoro records 25 minutes. Tab-title countdown everywhere, floating window where the browser has Document PiP
   - **No pause.** The session model has no such concept, and faking it with a stop and a start would litter Sessions with fragments of one phase
   - **`tickingEnabled` stays out of the UI** — a ticking loop needs a real looped asset, which is its own decision. The field remains in the schema, unexposed, rather than shipping a toggle that does nothing
