@@ -7,7 +7,7 @@ import { AreaDot } from "@lifedesk/ui/components/domain/area-dot";
 import { EmptyState } from "@lifedesk/ui/components/domain/empty-state";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { If } from "@/components/If";
@@ -16,6 +16,7 @@ import { DayGrid, sessionsToGridItems, useNowMinute } from "@/features/schedule"
 import { useToday } from "@/features/settings/hooks/useToday";
 import { orpc } from "@/lib/orpc/client";
 
+import { AddSessionDialog } from "./AddSessionDialog";
 import { RunawayBanner } from "./RunawayBanner";
 import { SessionList } from "./SessionList";
 
@@ -35,6 +36,7 @@ export function SessionsView() {
   const nowMinute = useNowMinute(today.data?.timezone) ?? 0;
 
   const [day, setDay] = useState<CalendarDay | null>(null);
+  const [adding, setAdding] = useState(false);
   const activeDay = day ?? today.data?.day;
 
   const sessions = useQuery({
@@ -84,9 +86,22 @@ export function SessionsView() {
   return (
     <div className="space-y-8">
       <header className="space-y-4">
-        <div>
-          <h1 className="font-serif text-3xl leading-tight md:text-4xl">Sessions</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Where the hours actually went.</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-3xl leading-tight md:text-4xl">Sessions</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Where the hours actually went.</p>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 gap-2"
+            disabled={!activeDay}
+            onClick={() => setAdding(true)}
+          >
+            <Plus className="size-4" />
+            <span className="max-sm:sr-only">Add session</span>
+          </Button>
         </div>
 
         {/* The runaway guard stays visible from any day — burying a forgotten
@@ -179,6 +194,20 @@ export function SessionsView() {
           <SessionList sessions={items} timezone={timezone} titleFor={titleFor} />
         </>
       )}
+
+      {/* Unmounted while closed, so each open re-derives its defaults from the
+          day on screen. No key: nowMinute ticks every minute, and keying on it
+          would remount the dialog mid-edit and wipe what was typed. */}
+      <If condition={adding && activeDay !== undefined}>
+        <AddSessionDialog
+          open={adding}
+          onOpenChange={setAdding}
+          day={activeDay as CalendarDay}
+          timezone={timezone}
+          nowMinute={nowMinute}
+          tasks={tasks.data?.items ?? []}
+        />
+      </If>
     </div>
   );
 }
