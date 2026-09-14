@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SignOutButton } from "./SignOutButton";
 import { AreaNavList } from "./AreaNavList";
 import { NavLinks } from "./NavLinks";
+import { TagNavList } from "./TagNavList";
 import { ThemeToggle } from "./ThemeToggle";
 
 /**
@@ -31,6 +32,8 @@ export function SidebarRail() {
           Areas
         </p>
         <AreaNavList />
+
+        <TagNavList />
       </div>
 
       <div className="space-y-1 border-t border-border p-2">

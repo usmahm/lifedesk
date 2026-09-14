@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-09-14 (**Phase 2.5 in progress** — project detail, manual sessions, field fixes)
+> Last updated: 2026-09-14 (**Phase 2.5 complete** — Phase 1's loose ends are closed)
 
 ---
 
@@ -430,7 +430,7 @@ The rest are pure UI against procedures that already exist, so they get built on
 
 - [x] **Manual session entry** — `AddSessionDialog` on the Sessions page. Day plus two times rather than two timestamps; an end before its start rolls to the next day, so an overnight session needs no second date field. Editing an existing session is still only via the runaway banner
 - [x] **Project detail and deletion** — `/projects/[id]` with open _and_ completed tasks. `project.remove` is new (the router only had `setArchived`); tasks and sessions detach rather than cascade, asserted in the ownership suite against both repo implementations
-- [ ] **Tags UI** — `tag.list`, `tag.create` and `task.addTag` are complete end-to-end and called from nowhere
+- [x] **Tags UI** — `TagPicker` in the task sheet (find, toggle, create inline), `/tags/[id]` listing everything carrying a tag with rename/recolour/delete, and a Tags section in the rail and mobile drawer that stays hidden until one exists. Deliberately **not** on `TaskRow`: the row already carries seven things, and tag chips there is the fruit salad the design rules exist to prevent
 - [x] **PWA raster icons** — real icon set in place: `app/favicon.ico` and `app/apple-icon.png` via Next's file conventions, `public/icon-192.png` and `icon-512.png` for the manifest. The placeholder `icon.svg` was removed rather than kept — browsers prefer SVG, so it would have won over the real artwork in the tab
 - [x] **Day intention line** — `DayPlan` table keyed `(userId, day)`, narrow on purpose. Uncontrolled input mounted only once loaded, since React 19's rules here forbid syncing state in an effect
 

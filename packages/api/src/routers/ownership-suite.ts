@@ -321,6 +321,29 @@ export function runOwnershipSuite(options: {
       });
     });
 
+    describe("tags", () => {
+      it("hides another user's tag from every mutation", async () => {
+        const tag = await call(
+          appRouter.tag.create,
+          { name: "deep-work", color: "indigo" },
+          { context: ctx(USER_A) },
+        );
+
+        await expectNotFound(
+          call(appRouter.tag.update, { id: tag.id, name: "stolen" }, { context: ctx(USER_B) }),
+        );
+        await expectNotFound(call(appRouter.tag.remove, { id: tag.id }, { context: ctx(USER_B) }));
+
+        // Untouched for its owner — the refusals above changed nothing.
+        await expect(
+          call(appRouter.tag.list, undefined, { context: ctx(USER_A) }),
+        ).resolves.toEqual([expect.objectContaining({ id: tag.id, name: "deep-work" })]);
+        await expect(
+          call(appRouter.tag.list, undefined, { context: ctx(USER_B) }),
+        ).resolves.toEqual([]);
+      });
+    });
+
     describe("sessions", () => {
       it("hides another user's session", async () => {
         const task = await call(appRouter.task.create, { title: "Work" }, { context: ctx(USER_A) });

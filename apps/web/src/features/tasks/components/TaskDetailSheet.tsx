@@ -20,6 +20,7 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { DurationField } from "@/components/fields/DurationField";
+import { TagPicker } from "@/features/tags/components/TagPicker";
 import { useToday } from "@/features/settings/hooks/useToday";
 import { orpc } from "@/lib/orpc/client";
 
@@ -184,6 +185,11 @@ function TaskDetailForm({
 
         {/* Keyed on the day so clearing it re-seeds the emptied fields. */}
         <PlannedTimeFields key={task.scheduledFor ?? "unscheduled"} task={task} />
+
+        <div className="space-y-1.5">
+          <Label>Tags</Label>
+          <TagPicker task={task} />
+        </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="task-notes">Notes</Label>

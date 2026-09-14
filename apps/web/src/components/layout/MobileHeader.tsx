@@ -14,6 +14,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { AreaNavList } from "./AreaNavList";
+import { TagNavList } from "./TagNavList";
 import { NAV_ITEMS } from "./constants";
 import { NavLinks } from "./NavLinks";
 import { ThemeToggle } from "./ThemeToggle";
@@ -56,6 +57,8 @@ export function MobileHeader() {
               Areas
             </p>
             <AreaNavList onNavigate={() => setOpen(false)} />
+
+            <TagNavList onNavigate={() => setOpen(false)} />
           </div>
 
           <div className="border-t border-border p-2">
