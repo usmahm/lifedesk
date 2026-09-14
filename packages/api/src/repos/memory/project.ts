@@ -84,16 +84,39 @@ export function createMemoryProjectRepo(db: MemoryDb, now: () => Date): ProjectR
       // delete the work inside it, nor erase hours already logged against it —
       // and if this diverged from Prisma, the swap would quietly change what
       // "delete" means.
-      for (const [taskId, task] of db.tasks) {
-        if (task.projectId === id) db.tasks.set(taskId, { ...task, projectId: null });
-      }
-      for (const [sessionId, session] of db.sessions) {
-        if (session.projectId === id) {
-          db.sessions.set(sessionId, { ...session, projectId: null });
-        }
-      }
+      //
+      // Prisma needs none of this: there it is one `deleteMany` and Postgres
+      // detaches the rows through the foreign key. Do not copy this shape into
+      // that implementation.
+      //
+      // The `userId` guard is not redundant even though ids are uuids. Every
+      // method here takes the owner first precisely so that touching another
+      // user's rows is impossible to write by accident, and a loop over the
+      // whole map is the one place that rule is easy to lose.
+      detach(db.tasks, userId, id, (task) => ({ ...task, projectId: null }));
+      detach(db.sessions, userId, id, (session) => ({ ...session, projectId: null }));
 
       return true;
     },
   };
+}
+
+/**
+ * Null out `projectId` on every row of `rows` that the owner holds against it.
+ *
+ * A scan, which is fine here and nowhere else: this map is a test double and
+ * the offline fallback, holding fixture data. A secondary index would have to
+ * be maintained by every create, update and delete — a whole class of drift
+ * bug bought in exchange for speed that is unmeasurable over a few hundred
+ * entries. Production does not run this path at all.
+ */
+function detach<T extends { userId: string; projectId: string | null }>(
+  rows: Map<string, T>,
+  userId: string,
+  projectId: string,
+  clear: (row: T) => T,
+): void {
+  for (const [key, row] of rows) {
+    if (row.userId === userId && row.projectId === projectId) rows.set(key, clear(row));
+  }
 }
