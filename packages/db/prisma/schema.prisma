@@ -95,6 +95,7 @@ model User {
   tasks    Task[]
   tags     Tag[]
   sessions TimeSession[]
+  dayPlans DayPlan[]
 
   authSessions Session[]
   accounts     Account[]
@@ -378,4 +379,26 @@ model TimeSession {
   @@index([userId, startedAt])
   @@index([userId, taskId])
   @@map("time_session")
+}
+
+/// One line naming what a day is for — the loudest thing on the Today screen.
+///
+/// Keyed by (userId, day) rather than by a surrogate id: there is exactly one
+/// per user per day, and the pair is the natural key. Rows are written on
+/// demand and deleted when cleared, so a missing row means "no intention"
+/// rather than one empty row per day of the year.
+model DayPlan {
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Calendar day in the user's zone — see the header note.
+  day String @db.VarChar(10)
+
+  intention String @db.VarChar(280)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@id([userId, day])
+  @@map("day_plan")
 }

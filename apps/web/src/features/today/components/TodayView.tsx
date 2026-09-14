@@ -16,6 +16,7 @@ import { useTasksForDay } from "@/features/tasks/hooks/useTasks";
 import { useCreateTask } from "@/features/tasks/hooks/useTaskMutations";
 
 import { CapacityMeter } from "./CapacityMeter";
+import { IntentionLine } from "./IntentionLine";
 import { DayTimeline } from "./DayTimeline";
 
 /**
@@ -95,6 +96,8 @@ export function TodayView() {
           // The serif appears here and on the intention line only.
           <h1 className="font-serif text-3xl leading-tight md:text-4xl">{formatDay(day!)}</h1>
         )}
+
+        <IntentionLine day={day} />
 
         <CapacityMeter day={day} tasks={tasks.data?.items} />
       </header>

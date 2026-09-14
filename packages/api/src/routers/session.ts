@@ -33,10 +33,8 @@ export const sessionRouter = {
     const range =
       input.filters.from || input.filters.to
         ? {
-            start: calendarDayRange(
-              input.filters.from ?? input.filters.to!,
-              settings.timezone,
-            ).start,
+            start: calendarDayRange(input.filters.from ?? input.filters.to!, settings.timezone)
+              .start,
             end: calendarDayRange(input.filters.to ?? input.filters.from!, settings.timezone).end,
           }
         : null;

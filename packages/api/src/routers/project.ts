@@ -13,12 +13,10 @@ export const projectRouter = {
     .input(listProjectsInput)
     .handler(({ input, context }) => context.repos.project.list(context.userId, input)),
 
-  get: protectedProcedure
-    .input(z.object({ id: idSchema }))
-    .handler(async ({ input, context }) => {
-      const project = await context.repos.project.findById(context.userId, input.id);
-      return project ?? notFound("Project");
-    }),
+  get: protectedProcedure.input(z.object({ id: idSchema })).handler(async ({ input, context }) => {
+    const project = await context.repos.project.findById(context.userId, input.id);
+    return project ?? notFound("Project");
+  }),
 
   create: protectedProcedure.input(createProjectInput).handler(async ({ input, context }) => {
     // Reject an area that isn't the caller's, rather than silently creating an

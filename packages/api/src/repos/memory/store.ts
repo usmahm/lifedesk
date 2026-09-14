@@ -4,6 +4,7 @@ import type {
   ResolvedCursorPage,
   Tag,
   Task,
+  DayPlan,
   TimeSession,
   UserSettings,
 } from "@lifedesk/contracts";
@@ -25,6 +26,8 @@ export type MemoryDb = {
   tags: Map<string, Tag>;
   taskTags: TaskTagRow[];
   sessions: Map<string, TimeSession>;
+  /** Keyed `userId:day`, not by id — see DayPlanRepo. */
+  dayPlans: Map<string, DayPlan>;
   settings: Map<string, UserSettings>;
 };
 
@@ -36,6 +39,7 @@ export function createDb(): MemoryDb {
     tags: new Map(),
     taskTags: [],
     sessions: new Map(),
+    dayPlans: new Map(),
     settings: new Map(),
   };
 }

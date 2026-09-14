@@ -54,12 +54,12 @@ export function createMemoryTaskRepo(db: MemoryDb, now: () => Date): TaskRepo {
         )
         .filter((task) => (filters.unscheduled ? task.scheduledFor === null : true))
         .filter((task) =>
-          filters.tagId ? db.taskTags.some((r) => r.taskId === task.id && r.tagId === filters.tagId) : true,
+          filters.tagId
+            ? db.taskTags.some((r) => r.taskId === task.id && r.tagId === filters.tagId)
+            : true,
         )
         .filter((task) =>
-          filters.search
-            ? task.title.toLowerCase().includes(filters.search.toLowerCase())
-            : true,
+          filters.search ? task.title.toLowerCase().includes(filters.search.toLowerCase()) : true,
         )
         .sort(bySortOrderThenCreated);
 

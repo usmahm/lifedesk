@@ -5,6 +5,7 @@ import type {
   CreateProjectInput,
   CreateTagInput,
   CreateTaskInput,
+  DayPlan,
   ListAreasInput,
   ListProjectsInput,
   ListSessionsInput,
@@ -66,11 +67,7 @@ export interface ProjectRepo {
 }
 
 export interface TaskRepo {
-  list(
-    userId: string,
-    filters: TaskFilters,
-    page: ResolvedCursorPage,
-  ): Promise<Page<TaskWithMeta>>;
+  list(userId: string, filters: TaskFilters, page: ResolvedCursorPage): Promise<Page<TaskWithMeta>>;
   findById(userId: string, id: string): Promise<TaskWithMeta | null>;
   create(userId: string, input: CreateTaskInput): Promise<TaskWithMeta>;
   update(userId: string, input: UpdateTaskInput): Promise<TaskWithMeta | null>;
@@ -140,10 +137,7 @@ export interface SessionRepo {
     needsReview: boolean,
   ): Promise<TimeSession | null>;
   create(userId: string, payload: CreateSessionPayload): Promise<TimeSession>;
-  update(
-    userId: string,
-    input: UpdateTaskSessionPatch,
-  ): Promise<TimeSession | null>;
+  update(userId: string, input: UpdateTaskSessionPatch): Promise<TimeSession | null>;
   remove(userId: string, id: string): Promise<boolean>;
   /** Total tracked seconds within a UTC instant range. */
   totalSecondsInRange(userId: string, range: { start: Date; end: Date }): Promise<number>;
@@ -160,6 +154,17 @@ export type UpdateTaskSessionPatch = {
   needsReview?: boolean;
 };
 
+export interface DayPlanRepo {
+  /**
+   * Keyed by (user, day) rather than by id — the only entity here that is.
+   * Returns null when nothing was ever written, so the UI can tell "no
+   * intention" from "an empty one".
+   */
+  get(userId: string, day: CalendarDay): Promise<DayPlan | null>;
+  /** Upsert. Null, or blank after trimming, deletes the row rather than storing "". */
+  setIntention(userId: string, day: CalendarDay, intention: string | null): Promise<DayPlan | null>;
+}
+
 export interface SettingsRepo {
   /** Creates defaults on first read, so callers never handle a missing row. */
   get(userId: string): Promise<UserSettings>;
@@ -172,5 +177,6 @@ export interface Repos {
   task: TaskRepo;
   tag: TagRepo;
   session: SessionRepo;
+  dayPlan: DayPlanRepo;
   settings: SettingsRepo;
 }

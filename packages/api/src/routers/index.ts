@@ -1,5 +1,6 @@
 import { areaRouter } from "./area";
 import { projectRouter } from "./project";
+import { dayPlanRouter } from "./day-plan";
 import { sessionRouter } from "./session";
 import { settingsRouter } from "./settings";
 import { tagRouter } from "./tag";
@@ -19,6 +20,7 @@ export const appRouter = {
   task: taskRouter,
   tag: tagRouter,
   session: sessionRouter,
+  dayPlan: dayPlanRouter,
 };
 
 export type AppRouter = typeof appRouter;

@@ -30,6 +30,7 @@ export default async function TodayPage() {
       }),
     ),
     queryClient.prefetchQuery(orpc.task.capacityForDay.queryOptions({ input: { day: today.day } })),
+    queryClient.prefetchQuery(orpc.dayPlan.get.queryOptions({ input: { day: today.day } })),
     queryClient.prefetchQuery(orpc.session.running.queryOptions()),
     queryClient.prefetchQuery(orpc.session.totalForToday.queryOptions()),
     queryClient.prefetchQuery(orpc.area.list.queryOptions({ input: { includeArchived: false } })),

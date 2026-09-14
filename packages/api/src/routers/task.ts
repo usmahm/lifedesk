@@ -20,12 +20,10 @@ export const taskRouter = {
       context.repos.task.list(context.userId, input.filters, input.page),
     ),
 
-  get: protectedProcedure
-    .input(z.object({ id: idSchema }))
-    .handler(async ({ input, context }) => {
-      const task = await context.repos.task.findById(context.userId, input.id);
-      return task ?? notFound("Task");
-    }),
+  get: protectedProcedure.input(z.object({ id: idSchema })).handler(async ({ input, context }) => {
+    const task = await context.repos.task.findById(context.userId, input.id);
+    return task ?? notFound("Task");
+  }),
 
   create: protectedProcedure
     .input(createTaskInput)

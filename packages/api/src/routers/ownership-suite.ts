@@ -359,6 +359,60 @@ export function runOwnershipSuite(options: {
       });
     });
 
+    describe("day plans", () => {
+      const DAY = "2026-09-14" as const;
+
+      it("gives each user their own intention for the same day", async () => {
+        await call(
+          appRouter.dayPlan.setIntention,
+          { day: DAY, intention: "Finish the ablations" },
+          { context: ctx(USER_A) },
+        );
+
+        // Same key, different owner — the composite primary key is (userId, day),
+        // so this would collide if the row were keyed by day alone.
+        await expect(
+          call(appRouter.dayPlan.get, { day: DAY }, { context: ctx(USER_B) }),
+        ).resolves.toBeNull();
+
+        await call(
+          appRouter.dayPlan.setIntention,
+          { day: DAY, intention: "Theirs" },
+          { context: ctx(USER_B) },
+        );
+
+        await expect(
+          call(appRouter.dayPlan.get, { day: DAY }, { context: ctx(USER_A) }),
+        ).resolves.toMatchObject({ intention: "Finish the ablations" });
+      });
+
+      it("distinguishes never set from cleared", async () => {
+        await expect(
+          call(appRouter.dayPlan.get, { day: "2026-09-15" }, { context: ctx(USER_A) }),
+        ).resolves.toBeNull();
+
+        await call(
+          appRouter.dayPlan.setIntention,
+          { day: "2026-09-15", intention: "Something" },
+          { context: ctx(USER_A) },
+        );
+
+        // Blank after trimming removes the row rather than storing "", so a
+        // cleared day reads the same as one never written.
+        await expect(
+          call(
+            appRouter.dayPlan.setIntention,
+            { day: "2026-09-15", intention: "   " },
+            { context: ctx(USER_A) },
+          ),
+        ).resolves.toBeNull();
+
+        await expect(
+          call(appRouter.dayPlan.get, { day: "2026-09-15" }, { context: ctx(USER_A) }),
+        ).resolves.toBeNull();
+      });
+    });
+
     describe("settings", () => {
       it("gives each user their own row", async () => {
         await call(appRouter.settings.update, { dailyCapacityMin: 480 }, { context: ctx(USER_A) });

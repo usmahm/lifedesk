@@ -6,3 +6,4 @@ export * from "./project";
 export * from "./task";
 export * from "./tag";
 export * from "./session";
+export * from "./day-plan";

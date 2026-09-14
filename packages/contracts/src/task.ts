@@ -35,7 +35,12 @@ export const taskSchema = z.object({
   priority: taskPrioritySchema,
 
   /** Minutes the user expects this to take. Compared against tracked time. */
-  estimateMin: z.number().int().min(1).max(24 * 60).nullable(),
+  estimateMin: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 60)
+    .nullable(),
   /** The day this is *committed to*, in the user's timezone. */
   scheduledFor: calendarDaySchema.nullable(),
   /** The day this is *due*. Distinct from when it's planned. */
@@ -148,9 +153,7 @@ export const setTaskPlannedTimeInput = z
   })
   .refine(
     (v) =>
-      v.plannedStartMin === null ||
-      v.plannedEndMin === null ||
-      v.plannedEndMin > v.plannedStartMin,
+      v.plannedStartMin === null || v.plannedEndMin === null || v.plannedEndMin > v.plannedStartMin,
     { message: "End must be after start", path: ["plannedEndMin"] },
   );
 

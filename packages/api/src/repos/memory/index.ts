@@ -2,6 +2,7 @@ import type { Repos } from "../types";
 import { createMemoryAreaRepo } from "./area";
 import { seedFixtures } from "./fixtures";
 import { createMemoryProjectRepo } from "./project";
+import { createMemoryDayPlanRepo } from "./day-plan";
 import { createMemorySessionRepo } from "./session";
 import { createMemorySettingsRepo } from "./settings";
 import { createMemoryTagRepo } from "./tag";
@@ -28,6 +29,7 @@ export function createMemoryRepos(options: { now: () => Date; seed?: boolean }):
     task: createMemoryTaskRepo(db, now),
     tag: createMemoryTagRepo(db, now),
     session: createMemorySessionRepo(db, now),
+    dayPlan: createMemoryDayPlanRepo(db),
     settings: createMemorySettingsRepo(db, now),
   };
 }

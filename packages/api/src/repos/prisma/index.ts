@@ -3,6 +3,7 @@ import { prisma } from "@lifedesk/db";
 import type { Repos } from "../types";
 import { createPrismaAreaRepo } from "./area";
 import { createPrismaProjectRepo } from "./project";
+import { createPrismaDayPlanRepo } from "./day-plan";
 import { createPrismaSessionRepo } from "./session";
 import { createPrismaSettingsRepo } from "./settings";
 import { createPrismaTagRepo } from "./tag";
@@ -22,6 +23,7 @@ export function createPrismaRepos({ now }: { now: () => Date }): Repos {
     task: createPrismaTaskRepo(prisma, now),
     tag: createPrismaTagRepo(prisma),
     session: createPrismaSessionRepo(prisma, now),
+    dayPlan: createPrismaDayPlanRepo(prisma),
     settings: createPrismaSettingsRepo(prisma, now),
   };
 }

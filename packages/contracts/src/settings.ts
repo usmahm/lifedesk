@@ -28,7 +28,11 @@ export const userSettingsSchema = z.object({
   timezone: z.string().min(1),
   weekStartsOn: weekStartsOnSchema,
   /** Soft cap used by the capacity meter. Informs, never blocks. */
-  dailyCapacityMin: z.number().int().min(30).max(24 * 60),
+  dailyCapacityMin: z
+    .number()
+    .int()
+    .min(30)
+    .max(24 * 60),
 
   pomodoroWorkMin: z.number().int().min(1).max(180),
   shortBreakMin: z.number().int().min(1).max(60),

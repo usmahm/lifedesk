@@ -364,6 +364,7 @@ Tag            userId, name, color
 TaskTag        taskId, tagId
 TimeSession    userId, taskId?, projectId?, areaId?,
                startedAt, endedAt?, durationSec?, source, note?
+DayPlan        userId, day, intention                           ← keyed (userId, day)
 ```
 
 **Design points that matter:**
@@ -374,8 +375,10 @@ TimeSession    userId, taskId?, projectId?, areaId?,
 - **All timestamps UTC** (`timestamptz`); date-only fields (`scheduledFor`, `dueDate`, `startDate`) stored as **`VarChar(10)` holding `YYYY-MM-DD`**, not Postgres `date`. Prisma surfaces a `date` column as a JS `Date` at UTC midnight — precisely the "Thursday renders as Wednesday evening" bug this rule exists to prevent. ISO strings sort lexicographically == chronologically, so ordering and range queries are unaffected, and every day calculation already lives in `packages/core/time` rather than in SQL. The conversion is removed rather than done carefully. Every timezone conversion goes through `packages/core/time` using the user's stored timezone. A planner that gets this wrong shows tasks on the wrong day after a flight, and it is miserable to retrofit.
 - **Composite indexes on `(userId, scheduledFor)` and `(userId, startedAt)`** — the two queries every screen makes.
 - **Soft delete via `archivedAt`** on Area and Project; a stray click shouldn't orphan three months of tracked time.
+- **Deleting a project detaches rather than cascades.** `Task.projectId` and `TimeSession.projectId` are `onDelete: SetNull`, so the work and the hours outlive the project. `setArchived` remains for "finished, keep it"; `remove` is for "this was a mistake".
+- **`DayPlan` is keyed `(userId, day)`**, the only entity here without a surrogate id — there is exactly one per user per day and the pair is the natural key. Rows are written on demand and **deleted when cleared**, never defaulted to `""`: a missing row means "no intention", which is the usual state, and keeping empty rows would both store 365 of them a year and make "never set" indistinguishable from "cleared" — the difference between a placeholder and a blank line. Held deliberately narrow; Phase 3's daily note and weekly review can add nullable columns once their shape is actually designed.
 
-Phase 3 adds `RecurringTask`, `Note` (daily), `Goal` (month outcomes), `WeekReview`.
+Phase 3 adds `RecurringTask`, `Goal` (month outcomes), `WeekReview`, and the daily note — most likely as columns on `DayPlan` rather than a table of their own.
 
 ---
 
@@ -429,7 +432,7 @@ The rest are pure UI against procedures that already exist, so they get built on
 - [x] **Project detail and deletion** — `/projects/[id]` with open _and_ completed tasks. `project.remove` is new (the router only had `setArchived`); tasks and sessions detach rather than cascade, asserted in the ownership suite against both repo implementations
 - [ ] **Tags UI** — `tag.list`, `tag.create` and `task.addTag` are complete end-to-end and called from nowhere
 - [x] **PWA raster icons** — real icon set in place: `app/favicon.ico` and `app/apple-icon.png` via Next's file conventions, `public/icon-192.png` and `icon-512.png` for the manifest. The placeholder `icon.svg` was removed rather than kept — browsers prefer SVG, so it would have won over the real artwork in the tab
-- [ ] **Day intention line** — designed in §4.7. Needs a `DayPlan`/intention field first, so it is the largest of the five, not the smallest
+- [x] **Day intention line** — `DayPlan` table keyed `(userId, day)`, narrow on purpose. Uncontrolled input mounted only once loaded, since React 19's rules here forbid syncing state in an effect
 
 ### Phase 1.5 — time blocking and timelines _(shipped)_
 

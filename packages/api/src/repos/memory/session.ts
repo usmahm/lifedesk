@@ -18,9 +18,7 @@ export function createMemorySessionRepo(db: MemoryDb, now: () => Date): SessionR
       const matched = mine(userId)
         .filter((s) => (filters.taskId === undefined ? true : s.taskId === filters.taskId))
         .filter((s) => (filters.areaId === undefined ? true : s.areaId === filters.areaId))
-        .filter((s) =>
-          filters.projectId === undefined ? true : s.projectId === filters.projectId,
-        )
+        .filter((s) => (filters.projectId === undefined ? true : s.projectId === filters.projectId))
         .filter((s) =>
           filters.needsReview === undefined ? true : s.needsReview === filters.needsReview,
         )
