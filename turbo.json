@@ -15,19 +15,26 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "env": ["DATABASE_URL", "DIRECT_URL"]
     },
+
+    "@lifedesk/db#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json"],
+      "outputs": ["src/generated/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^lint"],
+      "dependsOn": ["^build", "^lint"],
       "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^build", "^typecheck"],
       "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "test": {
+      "dependsOn": ["^build"],
       "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "clean": {

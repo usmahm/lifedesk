@@ -33,7 +33,15 @@ Preview deployments get a different generated URL each time. Either set `BETTER_
 | Build command                        | default (`next build`)          |
 | Install command                      | default (`pnpm install`)        |
 
-Nothing custom is needed for Prisma: `packages/db` has a `postinstall` that runs `prisma generate`, so the client is built on every install. The generated client is gitignored, so this is load-bearing rather than a convenience.
+Nothing custom is needed for Prisma, but **not** because of the `postinstall`. `packages/db` has a `build` script that runs `prisma generate`, and `@lifedesk/web#build` reaches it through `^build`, so the client is produced as part of the build graph.
+
+This was originally left to `postinstall` alone, and that is a trap worth recording. The generated client is gitignored, so it has to be produced on the build machine — but once Vercel restores a build cache, `pnpm install` reports `Already up to date` in under a second and **skips lifecycle scripts entirely**. Generation never runs, and the build fails with `Can't resolve './generated/client'`. It only ever worked on a cold cache.
+
+`prisma generate` needs no database URL (verified), so nothing here can be blocked by a missing environment variable, and Turbo caches the output keyed on `prisma/schema.prisma` rather than on connection strings.
+
+`typecheck`, `lint` and `test` also depend on `^build` for the same reason — all three need the generated client, and none of them should rely on an install having happened.
+
+The `postinstall` stays as a convenience for a fresh clone. It is no longer load-bearing.
 
 ---
 
