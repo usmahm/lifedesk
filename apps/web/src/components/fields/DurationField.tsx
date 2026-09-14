@@ -71,8 +71,11 @@ export function DurationField({
   function commit(): void {
     const next = draftRef.current;
     if (next === null || next === value) return;
-    // The draft stays until the write fires, so the field never flashes
-    // back to the old value while a debounced commit is in flight.
+    // The draft is handed over only when the write actually fires. That
+    // relies on the caller updating `value` in the same tick — a local
+    // setState, or an optimistic cache write. A caller that waits for a
+    // server round trip will show its old value in the gap, which reads
+    // as the edit being lost. See useOptimisticTask in useTaskMutations.
     schedule(() => {
       draftRef.current = null;
       setDraft(null);
