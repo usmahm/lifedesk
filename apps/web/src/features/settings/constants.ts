@@ -9,3 +9,7 @@ export const WEEK_START_OPTIONS: { value: WeekStartsOn; label: string }[] = [
 
 /** Matches the floor in userSettingsSchema. */
 export const MIN_DAILY_CAPACITY_MIN = 30;
+
+/** Both match the bounds on `longBreakEvery` in userSettingsSchema. */
+export const MIN_LONG_BREAK_EVERY = 2;
+export const MAX_LONG_BREAK_EVERY = 12;

@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-09-14 (**Phase 2.5 complete** — Phase 1's loose ends are closed)
+> Last updated: 2026-09-14 (**Phase 3 started** — Pomodoro and the floating timer)
 
 ---
 
@@ -451,7 +451,10 @@ routine blocks, drag-and-drop, blocks crossing midnight.
 ### Phase 3 — the thing that teaches you
 
 - [ ] Recurring tasks
-- [ ] Pomodoro + PiP floating timer
+- [x] **Pomodoro + PiP floating timer** — work phases are ordinary sessions with `source: "pomodoro"`; breaks and the cycle count live in `localStorage`. Nothing auto-starts, but phases auto-_end_, so a 25-minute pomodoro records 25 minutes. Tab-title countdown everywhere, floating window where the browser has Document PiP
+  - **No pause.** The session model has no such concept, and faking it with a stop and a start would litter Sessions with fragments of one phase
+  - **`tickingEnabled` stays out of the UI** — a ticking loop needs a real looped asset, which is its own decision. The field remains in the schema, unexposed, rather than shipping a toggle that does nothing
+  - **A session left running past its target is not back-dated.** Trimming real elapsed time to a tidy 25 minutes would be the app lying about where the hours went; the runaway guard owns that case
 - [ ] Estimates vs actual
 - [ ] Month / outcomes view
 - [ ] Weekly review

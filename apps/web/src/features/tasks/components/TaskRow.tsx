@@ -11,6 +11,7 @@ import { Play } from "lucide-react";
 
 import { If } from "@/components/If";
 import { useRunningSession } from "@/features/timer/hooks/useRunningSession";
+import { useTimerMode } from "@/features/timer/hooks/useTimerMode";
 import { useStartTimer } from "@/features/timer/hooks/useTimerControls";
 import { orpc } from "@/lib/orpc/client";
 
@@ -32,6 +33,7 @@ export function TaskRow({
 }) {
   const setComplete = useSetTaskComplete();
   const startTimer = useStartTimer();
+  const [mode] = useTimerMode();
   const running = useRunningSession();
 
   const areas = useQuery(orpc.area.list.queryOptions({ input: { includeArchived: true } }));
@@ -100,7 +102,10 @@ export function TaskRow({
             isRunning && "text-focus md:opacity-100",
           )}
           disabled={startTimer.isPending || isRunning}
-          onClick={() => startTimer.mutate({ taskId: task.id, source: "timer" })}
+          // Starts whichever clock the timer bar is set to. The row keeps one
+          // ▶ rather than gaining a second control — the mode is chosen once,
+          // in the bar, not per task.
+          onClick={() => startTimer.mutate({ taskId: task.id, source: mode })}
           aria-label={isRunning ? "Session running" : `Start timer for "${task.title}"`}
         >
           <Play className={cn("size-3.5", isRunning && "fill-current")} />

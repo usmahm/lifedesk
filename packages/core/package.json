@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./time": "./src/time/index.ts",
     "./capacity": "./src/capacity/index.ts",
-    "./schedule": "./src/schedule/index.ts"
+    "./schedule": "./src/schedule/index.ts",
+    "./pomodoro": "./src/pomodoro/index.ts"
   },
   "scripts": {
     "lint": "eslint .",

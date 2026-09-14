@@ -1,6 +1,7 @@
 "use client";
 
 import type { WeekStartsOn } from "@lifedesk/contracts";
+import { Checkbox } from "@lifedesk/ui/components/checkbox";
 import { Input } from "@lifedesk/ui/components/input";
 import { Label } from "@lifedesk/ui/components/label";
 import {
@@ -19,7 +20,12 @@ import { DurationField } from "@/components/fields/DurationField";
 import { ErrorState } from "@/components/ErrorState";
 import { orpc } from "@/lib/orpc/client";
 
-import { MIN_DAILY_CAPACITY_MIN, WEEK_START_OPTIONS } from "../constants";
+import {
+  MAX_LONG_BREAK_EVERY,
+  MIN_DAILY_CAPACITY_MIN,
+  MIN_LONG_BREAK_EVERY,
+  WEEK_START_OPTIONS,
+} from "../constants";
 
 export function SettingsView() {
   const queryClient = useQueryClient();
@@ -132,12 +138,89 @@ export function SettingsView() {
 
       <Separator />
 
-      <section className="space-y-2">
+      <section className="space-y-4">
         <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Pomodoro
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Work and break lengths, sounds, and the floating timer arrive in Phase 3.
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="pomodoro-work">Work</Label>
+            <DurationField
+              id="pomodoro-work"
+              value={settings.data.pomodoroWorkMin}
+              minMinutes={1}
+              clearable={false}
+              onChange={(minutes) =>
+                minutes !== null && minutes >= 1 && update.mutate({ pomodoroWorkMin: minutes })
+              }
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pomodoro-short">Short break</Label>
+            <DurationField
+              id="pomodoro-short"
+              value={settings.data.shortBreakMin}
+              minMinutes={1}
+              clearable={false}
+              onChange={(minutes) =>
+                minutes !== null && minutes >= 1 && update.mutate({ shortBreakMin: minutes })
+              }
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pomodoro-long">Long break</Label>
+            <DurationField
+              id="pomodoro-long"
+              value={settings.data.longBreakMin}
+              minMinutes={1}
+              clearable={false}
+              onChange={(minutes) =>
+                minutes !== null && minutes >= 1 && update.mutate({ longBreakMin: minutes })
+              }
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pomodoro-every">Long break every</Label>
+            {/* A count, not a duration — DurationField would read "0h 4m". */}
+            <Input
+              id="pomodoro-every"
+              type="number"
+              inputMode="numeric"
+              min={MIN_LONG_BREAK_EVERY}
+              max={MAX_LONG_BREAK_EVERY}
+              defaultValue={settings.data.longBreakEvery}
+              onBlur={(event) => {
+                const value = Number(event.target.value);
+                if (
+                  Number.isInteger(value) &&
+                  value >= MIN_LONG_BREAK_EVERY &&
+                  value <= MAX_LONG_BREAK_EVERY &&
+                  value !== settings.data.longBreakEvery
+                ) {
+                  update.mutate({ longBreakEvery: value });
+                }
+              }}
+            />
+            <p className="text-xs text-muted-foreground">Work phases before the long one.</p>
+          </div>
+        </div>
+
+        <label className="flex items-center gap-3">
+          <Checkbox
+            checked={settings.data.soundEnabled}
+            onCheckedChange={(checked) => update.mutate({ soundEnabled: checked === true })}
+          />
+          <span className="text-sm">Chime when a phase ends</span>
+        </label>
+
+        <p className="text-xs text-muted-foreground">
+          A countdown shows in the tab title while a phase runs. Where the browser supports it, the
+          timer can also pop out into a floating window — Safari cannot, so the tab title is the
+          fallback there.
         </p>
       </section>
     </div>
