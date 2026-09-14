@@ -3,7 +3,7 @@
 > **This file is the source of truth.** Decisions, design system, architecture, and progress all live here.
 > If code and this document disagree, one of them is a bug — fix it in the same change.
 >
-> Last updated: 2026-08-31 (**Phase 2 complete** — Neon Postgres, real auth, ready to deploy)
+> Last updated: 2026-09-14 (**Phase 2.5 in progress** — project detail, manual sessions, field fixes)
 
 ---
 
@@ -425,8 +425,8 @@ Deferred until the real backend is in. Two reasons, and they are the point rathe
 
 The rest are pure UI against procedures that already exist, so they get built once, directly against the real database.
 
-- [ ] **Manual session entry and editing** — `session.create` and `session.update` exist with **0 web call sites**; only `RunawayBanner` calls `update`. A forgotten timer can be corrected, but a session you never started cannot be added. Highest value of the five: the plan calls this "not optional polish — you will forget to stop the timer"
-- [ ] **Project detail** — no `/projects/[id]`; `project.get` exists, **0 call sites**. Projects are created and listed from the area page but cannot be opened, which is a dead end you hit constantly
+- [x] **Manual session entry** — `AddSessionDialog` on the Sessions page. Day plus two times rather than two timestamps; an end before its start rolls to the next day, so an overnight session needs no second date field. Editing an existing session is still only via the runaway banner
+- [x] **Project detail and deletion** — `/projects/[id]` with open _and_ completed tasks. `project.remove` is new (the router only had `setArchived`); tasks and sessions detach rather than cascade, asserted in the ownership suite against both repo implementations
 - [ ] **Tags UI** — `tag.list`, `tag.create` and `task.addTag` are complete end-to-end and called from nowhere
 - [x] **PWA raster icons** — real icon set in place: `app/favicon.ico` and `app/apple-icon.png` via Next's file conventions, `public/icon-192.png` and `icon-512.png` for the manifest. The placeholder `icon.svg` was removed rather than kept — browsers prefer SVG, so it would have won over the real artwork in the tab
 - [ ] **Day intention line** — designed in §4.7. Needs a `DayPlan`/intention field first, so it is the largest of the five, not the smallest
