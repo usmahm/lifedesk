@@ -3,7 +3,7 @@
 import { formatElapsed } from "@lifedesk/core/time";
 import { Button } from "@lifedesk/ui/components/button";
 import { cn } from "@lifedesk/ui/lib/utils";
-import { Coffee, PictureInPicture2, Play, Square } from "lucide-react";
+import { Coffee, Play, Square } from "lucide-react";
 
 import { If } from "@/components/If";
 
@@ -26,13 +26,10 @@ export function PomodoroControls({
   seconds,
   breakKind,
   canResume,
-  isPipSupported,
-  isPipOpen,
   onStop,
   onStartBreak,
   onSkipBreak,
   onStartWork,
-  onTogglePip,
 }: {
   phase: PomodoroPhase;
   label: string;
@@ -40,13 +37,10 @@ export function PomodoroControls({
   seconds: number;
   breakKind: "short" | "long";
   canResume: boolean;
-  isPipSupported: boolean;
-  isPipOpen: boolean;
   onStop: () => void;
   onStartBreak: () => void;
   onSkipBreak: () => void;
   onStartWork: () => void;
-  onTogglePip: () => void;
 }) {
   const isWork = phase === "work";
   const isCounting = phase === "work" || phase === "break";
@@ -111,19 +105,6 @@ export function PomodoroControls({
         <Button size="sm" onClick={onStartWork}>
           <Play className="size-3.5 fill-current" />
           Start work
-        </Button>
-      </If>
-
-      {/* Hidden where the API does not exist at all — Safari, desktop and iOS. */}
-      <If condition={isPipSupported && isCounting}>
-        <Button
-          size="icon"
-          variant="ghost"
-          aria-label={isPipOpen ? "Close floating timer" : "Pop out the timer"}
-          aria-pressed={isPipOpen}
-          onClick={onTogglePip}
-        >
-          <PictureInPicture2 className="size-4" />
         </Button>
       </If>
     </>

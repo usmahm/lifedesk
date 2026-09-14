@@ -5,22 +5,21 @@ import { Button } from "@lifedesk/ui/components/button";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { cn } from "@lifedesk/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { Maximize2, Square } from "lucide-react";
+import { Maximize2, PictureInPicture2, Square } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
 
 import { If } from "@/components/If";
 import { FOCUS_ORIGIN_PARAM, FOCUS_PATH } from "@/features/focus/constants";
 import { orpc } from "@/lib/orpc/client";
 
+import { describePhase } from "../lib/describe-phase";
 import { requestNotificationPermission } from "../lib/notify";
-import { usePictureInPicture } from "../hooks/usePictureInPicture";
+import { usePip } from "../hooks/usePip";
 import { usePomodoro } from "../hooks/usePomodoro";
 import { useCountdownTitle } from "../hooks/useCountdownTitle";
 import { useElapsedSeconds, useRunningSession } from "../hooks/useRunningSession";
 import { useTimerMode } from "../hooks/useTimerMode";
 import { useStopTimer } from "../hooks/useTimerControls";
-import { PipTimer } from "./PipTimer";
 import { PomodoroControls } from "./PomodoroControls";
 import { TimerModeToggle } from "./TimerModeToggle";
 
@@ -41,7 +40,7 @@ export function TimerBar({ className }: { className?: string }) {
   const running = useRunningSession();
   const stop = useStopTimer();
   const pomodoro = usePomodoro();
-  const pip = usePictureInPicture();
+  const pip = usePip();
 
   const total = useQuery(orpc.session.totalForToday.queryOptions());
 
@@ -78,6 +77,8 @@ export function TimerBar({ className }: { className?: string }) {
   const isRunning = session !== null;
   const todayTotal = (total.data?.totalSec ?? 0) + (isRunning ? elapsed : 0);
   const isWorking = isPomodoro ? pomodoro.phase === "work" : isRunning;
+  // Something is on the clock — a session, or a Pomodoro break between two.
+  const isCounting = isRunning || pomodoro.phase === "break";
 
   return (
     <div
@@ -96,13 +97,10 @@ export function TimerBar({ className }: { className?: string }) {
             seconds={pomodoro.remaining}
             breakKind={pomodoro.breakKind}
             canResume={pomodoro.canResume}
-            isPipSupported={pip.isSupported}
-            isPipOpen={pip.isOpen}
             onStop={() => session && stop.mutate({ id: session.id })}
             onStartBreak={pomodoro.startBreak}
             onSkipBreak={pomodoro.skipBreak}
             onStartWork={pomodoro.startWork}
-            onTogglePip={() => (pip.isOpen ? pip.close() : void pip.open())}
           />
         ) : isRunning ? (
           <>
@@ -156,6 +154,20 @@ export function TimerBar({ className }: { className?: string }) {
           </Button>
         </If>
 
+        {/* One button for both modes — a plain timer is just as worth floating
+            over your editor as a Pomodoro. Absent where the API is: Safari. */}
+        <If condition={pip.isSupported && isCounting}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={pip.isOpen ? "Close floating timer" : "Pop out the timer"}
+            aria-pressed={pip.isOpen}
+            onClick={pip.toggle}
+          >
+            <PictureInPicture2 className="size-4" />
+          </Button>
+        </If>
+
         <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
           {/* Switching mid-phase would leave a session running under rules it
               was not started with. */}
@@ -175,40 +187,6 @@ export function TimerBar({ className }: { className?: string }) {
           </span>
         </div>
       </div>
-
-      {/* `&&`, not `<If>`: the condition is doing the narrowing that makes
-          `.document` safe, and `<If>` cannot narrow across a component
-          boundary. See .claude/rules/ui-components.md. */}
-      {pip.pipWindow &&
-        createPortal(
-          <PipTimer
-            phase={pomodoro.phase}
-            label={phaseLabel}
-            taskTitle={taskTitle}
-            seconds={pomodoro.remaining}
-            onStop={() => session && stop.mutate({ id: session.id })}
-          />,
-          pip.pipWindow.document.body,
-        )}
     </div>
   );
-}
-
-function describePhase(
-  phase: ReturnType<typeof usePomodoro>["phase"],
-  position: number,
-  longBreakEvery: number,
-): string {
-  switch (phase) {
-    case "work":
-      return `Work · ${position} of ${longBreakEvery}`;
-    case "work-ended":
-      return "Phase done — take a break";
-    case "break":
-      return "Break";
-    case "break-ended":
-      return "Break over";
-    default:
-      return "Pomodoro · hit play on a task";
-  }
 }

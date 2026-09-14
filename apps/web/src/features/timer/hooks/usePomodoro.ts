@@ -31,8 +31,14 @@ import { useStartTimer, useStopTimer } from "./useTimerControls";
  * Nothing auto-starts. Phases do auto-*end*: at its target the work session
  * stops, so a 25-minute pomodoro records 25 minutes rather than however long
  * you took to notice. Then it waits.
+ *
+ * **`drive` must be true in exactly one mounted component.** The side effects —
+ * stopping the session at its target, incrementing the cycle, the chime and
+ * the notification — are not idempotent across instances: two drivers would
+ * advance `completedWorkPhases` twice for one phase and race each other's
+ * writes. `PomodoroEngine` is the one driver; everything else reads.
  */
-export function usePomodoro() {
+export function usePomodoro({ drive = false }: { drive?: boolean } = {}) {
   const settings = useQuery(orpc.settings.get.queryOptions());
   const today = useQuery(orpc.settings.today.queryOptions());
   const running = useRunningSession();
@@ -124,16 +130,18 @@ export function usePomodoro() {
   const endedSessionId = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!drive) return;
     if (phase !== "work" || remaining > 0 || !session) return;
     if (endedSessionId.current === session.id) return;
 
     endedSessionId.current = session.id;
     endWorkPhase(session.id, session.taskId);
-  }, [endWorkPhase, phase, remaining, session]);
+  }, [drive, endWorkPhase, phase, remaining, session]);
 
   const announcedBreakEnd = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!drive) return;
     if (phase !== "break-ended" || current.breakEndsAt === null) return;
     if (announcedBreakEnd.current === current.breakEndsAt) return;
 
@@ -141,7 +149,7 @@ export function usePomodoro() {
 
     if (soundEnabled) playChime("break-end");
     notify("Break over", "Start the next phase when you're ready.");
-  }, [current.breakEndsAt, phase, soundEnabled]);
+  }, [current.breakEndsAt, drive, phase, soundEnabled]);
 
   const startBreak = useCallback(() => {
     writeCycle({

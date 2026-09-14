@@ -7,11 +7,13 @@ import { AreaDot } from "@lifedesk/ui/components/domain/area-dot";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { cn } from "@lifedesk/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Coffee, Play, Square, X } from "lucide-react";
+import { Check, Coffee, PictureInPicture2, Play, Square, X } from "lucide-react";
 import { useEffect } from "react";
 
 import { If } from "@/components/If";
 import { useSetTaskComplete } from "@/features/tasks/hooks/useTaskMutations";
+import { describePhase } from "@/features/timer/lib/describe-phase";
+import { usePip } from "@/features/timer/hooks/usePip";
 import { usePomodoro } from "@/features/timer/hooks/usePomodoro";
 import { useElapsedSeconds, useRunningSession } from "@/features/timer/hooks/useRunningSession";
 import { useStopTimer } from "@/features/timer/hooks/useTimerControls";
@@ -31,6 +33,7 @@ import { FocusSessions } from "./FocusSessions";
  */
 export function FocusView() {
   const exit = useExitFocus();
+  const pip = usePip();
   const running = useRunningSession();
   const pomodoro = usePomodoro();
   const stop = useStopTimer();
@@ -67,7 +70,7 @@ export function FocusView() {
 
   if (running.isPending || (session?.taskId && task.isPending)) {
     return (
-      <FocusFrame onExit={exit}>
+      <FocusFrame onExit={exit} pip={pip}>
         <div className="space-y-4">
           <Skeleton className="mx-auto h-9 w-64" />
           <Skeleton className="mx-auto h-14 w-40" />
@@ -84,7 +87,7 @@ export function FocusView() {
   const isWorking = isPomodoro ? pomodoro.phase === "work" : session !== null;
 
   return (
-    <FocusFrame onExit={exit}>
+    <FocusFrame onExit={exit} pip={pip}>
       <div className="space-y-8 text-center">
         <header className="space-y-2">
           {/* Sans, not serif: the serif is reserved for the date header and the
@@ -186,11 +189,35 @@ export function FocusView() {
   );
 }
 
-/** The bare page: one exit affordance, and a lot of room. */
-function FocusFrame({ children, onExit }: { children: React.ReactNode; onExit: () => void }) {
+/** The bare page: two affordances, and a lot of room. */
+function FocusFrame({
+  children,
+  onExit,
+  pip,
+}: {
+  children: React.ReactNode;
+  onExit: () => void;
+  pip: ReturnType<typeof usePip>;
+}) {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <div className="flex justify-end p-4">
+      <div className="flex justify-end gap-1 p-4">
+        {/* Focus and the floating window are not alternatives: Focus is where
+            you settle in, and popping out is what you do when you leave for
+            your editor. The window now outlives this page either way. */}
+        <If condition={pip.isSupported}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={pip.toggle}
+            aria-pressed={pip.isOpen}
+            className="text-muted-foreground"
+          >
+            <PictureInPicture2 className="size-4" />
+            <span className="max-sm:sr-only">{pip.isOpen ? "Docked" : "Pop out"}</span>
+          </Button>
+        </If>
+
         <Button variant="ghost" size="sm" onClick={onExit} className="text-muted-foreground">
           <X className="size-4" />
           <span className="max-sm:sr-only">Exit</span>
@@ -201,23 +228,4 @@ function FocusFrame({ children, onExit }: { children: React.ReactNode; onExit: (
       <main className={cn("mx-auto w-full flex-1 px-6 pb-16", FOCUS_COLUMN)}>{children}</main>
     </div>
   );
-}
-
-function describePhase(
-  phase: ReturnType<typeof usePomodoro>["phase"],
-  position: number,
-  longBreakEvery: number,
-): string {
-  switch (phase) {
-    case "work":
-      return `Work · ${position} of ${longBreakEvery}`;
-    case "work-ended":
-      return "Phase done — take a break";
-    case "break":
-      return "Break";
-    case "break-ended":
-      return "Break over";
-    default:
-      return "";
-  }
 }

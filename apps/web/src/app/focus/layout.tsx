@@ -2,6 +2,7 @@ import { Toaster } from "@lifedesk/ui/components/sonner";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { PomodoroEngine } from "@/features/timer/components/PomodoroEngine";
 import { isSignedIn } from "@/lib/auth/session";
 
 /**
@@ -20,6 +21,9 @@ export default async function FocusLayout({ children }: { children: ReactNode })
   return (
     <>
       {children}
+      {/* Focus sits outside AppShell, so it carries its own driver — the cycle
+          has to keep advancing while you're in here. */}
+      <PomodoroEngine />
       <Toaster position="bottom-center" />
     </>
   );

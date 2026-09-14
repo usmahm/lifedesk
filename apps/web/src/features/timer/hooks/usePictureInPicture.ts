@@ -72,8 +72,27 @@ export function usePictureInPicture() {
     setPipWindow(null);
   }, []);
 
-  // A PiP window outlives a client-side navigation, so it has to be closed
-  // when the owner unmounts or it hangs around with a frozen clock.
+  /**
+   * Keep the theme in step while the window is open.
+   *
+   * `mirrorTheme` only runs once, at open. Now that the window survives
+   * navigation it can easily outlive a theme toggle, and a dark app with a
+   * white floating timer is worse than no floating timer.
+   */
+  useEffect(() => {
+    if (!pipWindow) return;
+
+    const observer = new MutationObserver(() => mirrorTheme(pipWindow));
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "style"],
+    });
+
+    return () => observer.disconnect();
+  }, [pipWindow]);
+
+  // Closed when the owner unmounts, or it hangs around with a frozen clock.
+  // The owner is the root provider, so in practice that is a full teardown.
   useEffect(
     () => () => {
       windowRef.current?.close();
