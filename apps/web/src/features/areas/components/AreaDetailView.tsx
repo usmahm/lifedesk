@@ -6,7 +6,8 @@ import { Input } from "@lifedesk/ui/components/input";
 import { Separator } from "@lifedesk/ui/components/separator";
 import { Skeleton } from "@lifedesk/ui/components/skeleton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -105,11 +106,17 @@ export function AreaDetailView({ areaId }: { areaId: string }) {
         ) : projects.data && projects.data.length > 0 ? (
           <ul className="divide-y divide-border">
             {projects.data.map((project) => (
-              <li key={project.id} className="flex h-11 items-center gap-3 text-sm">
-                <span className="flex-1 truncate">{project.name}</span>
-                <If condition={project.status !== "active"}>
-                  <span className="text-xs text-muted-foreground">{project.status}</span>
-                </If>
+              <li key={project.id}>
+                <Link
+                  href={`/projects/${project.id}`}
+                  className="flex h-11 items-center gap-3 text-sm hover:text-foreground/80"
+                >
+                  <span className="flex-1 truncate">{project.name}</span>
+                  <If condition={project.status !== "active"}>
+                    <span className="text-xs text-muted-foreground">{project.status}</span>
+                  </If>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                </Link>
               </li>
             ))}
           </ul>

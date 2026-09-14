@@ -129,6 +129,48 @@ export function runOwnershipSuite(options: {
             { context: ctx(USER_B) },
           ),
         );
+        await expectNotFound(
+          call(appRouter.project.remove, { id: project.id }, { context: ctx(USER_B) }),
+        );
+
+        // Still there for its owner — the refusal above deleted nothing.
+        await expect(
+          call(appRouter.project.get, { id: project.id }, { context: ctx(USER_A) }),
+        ).resolves.toMatchObject({ id: project.id });
+      });
+
+      it("keeps tasks and sessions when their project is deleted", async () => {
+        const project = await call(
+          appRouter.project.create,
+          { areaId: null, name: "Paper", description: null, startDate: null, dueDate: null },
+          { context: ctx(USER_A) },
+        );
+        const task = await call(
+          appRouter.task.create,
+          { title: "Rerun ablations", projectId: project.id },
+          { context: ctx(USER_A) },
+        );
+        const session = await call(
+          appRouter.session.start,
+          { taskId: task.id },
+          { context: ctx(USER_A) },
+        );
+        await call(appRouter.session.stop, { id: session.id }, { context: ctx(USER_A) });
+
+        await call(appRouter.project.remove, { id: project.id }, { context: ctx(USER_A) });
+
+        // onDelete: SetNull on both relations. Deleting a project must not
+        // delete the work inside it, nor erase hours already logged.
+        const kept = await call(appRouter.task.get, { id: task.id }, { context: ctx(USER_A) });
+        expect(kept.projectId).toBeNull();
+
+        const sessions = await call(
+          appRouter.session.list,
+          { filters: {}, page: { limit: 10 } },
+          { context: ctx(USER_A) },
+        );
+        expect(sessions.items.map((s) => s.id)).toContain(session.id);
+        expect(sessions.items.find((s) => s.id === session.id)?.projectId).toBeNull();
       });
 
       it("refuses to attach a project to someone else's area", async () => {

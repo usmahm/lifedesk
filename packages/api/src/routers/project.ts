@@ -51,4 +51,12 @@ export const projectRouter = {
       );
       return project ?? notFound("Project");
     }),
+
+  remove: protectedProcedure
+    .input(z.object({ id: idSchema }))
+    .handler(async ({ input, context }) => {
+      const removed = await context.repos.project.remove(context.userId, input.id);
+      if (!removed) notFound("Project");
+      return { id: input.id };
+    }),
 };

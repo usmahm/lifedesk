@@ -75,5 +75,12 @@ export function createPrismaProjectRepo(prisma: PrismaClient, now: () => Date): 
       const row = await prisma.project.findFirst({ where: { id, userId } });
       return row ? toProject(row) : null;
     },
+
+    async remove(userId, id) {
+      // Tasks and sessions detach rather than cascade — `onDelete: SetNull` on
+      // both relations. Losing a project must not lose the work or the hours.
+      const { count } = await prisma.project.deleteMany({ where: { id, userId } });
+      return count > 0;
+    },
   };
 }

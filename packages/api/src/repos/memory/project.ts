@@ -73,5 +73,27 @@ export function createMemoryProjectRepo(db: MemoryDb, now: () => Date): ProjectR
       db.projects.set(updated.id, updated);
       return updated;
     },
+
+    async remove(userId, id) {
+      const existing = db.projects.get(id);
+      if (!existing || existing.userId !== userId) return false;
+
+      db.projects.delete(id);
+
+      // Mirrors `onDelete: SetNull` in the schema. Deleting a project must not
+      // delete the work inside it, nor erase hours already logged against it —
+      // and if this diverged from Prisma, the swap would quietly change what
+      // "delete" means.
+      for (const [taskId, task] of db.tasks) {
+        if (task.projectId === id) db.tasks.set(taskId, { ...task, projectId: null });
+      }
+      for (const [sessionId, session] of db.sessions) {
+        if (session.projectId === id) {
+          db.sessions.set(sessionId, { ...session, projectId: null });
+        }
+      }
+
+      return true;
+    },
   };
 }

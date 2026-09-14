@@ -61,6 +61,8 @@ export interface ProjectRepo {
   create(userId: string, input: CreateProjectInput): Promise<Project>;
   update(userId: string, input: UpdateProjectInput): Promise<Project | null>;
   setArchived(userId: string, id: string, archived: boolean): Promise<Project | null>;
+  /** Tasks and sessions survive, detached — see the memory and Prisma notes. */
+  remove(userId: string, id: string): Promise<boolean>;
 }
 
 export interface TaskRepo {
