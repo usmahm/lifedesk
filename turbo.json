@@ -19,7 +19,8 @@
     "@lifedesk/db#build": {
       "dependsOn": ["^build"],
       "inputs": ["prisma/schema.prisma", "prisma.config.ts", "package.json"],
-      "outputs": ["src/generated/**"]
+      "outputs": ["src/generated/**"],
+      "passThroughEnv": ["DATABASE_URL", "DIRECT_URL"]
     },
     "dev": {
       "cache": false,

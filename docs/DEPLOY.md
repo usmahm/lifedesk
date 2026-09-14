@@ -37,7 +37,20 @@ Nothing custom is needed for Prisma, but **not** because of the `postinstall`. `
 
 This was originally left to `postinstall` alone, and that is a trap worth recording. The generated client is gitignored, so it has to be produced on the build machine — but once Vercel restores a build cache, `pnpm install` reports `Already up to date` in under a second and **skips lifecycle scripts entirely**. Generation never runs, and the build fails with `Can't resolve './generated/client'`. It only ever worked on a cold cache.
 
-`prisma generate` needs no database URL (verified), so nothing here can be blocked by a missing environment variable, and Turbo caches the output keyed on `prisma/schema.prisma` rather than on connection strings.
+`prisma generate` never _connects_ — a deliberately unreachable URL generates fine in under 100ms. But `prisma.config.ts` declares `env("DIRECT_URL")` as its datasource, and Prisma resolves that eagerly while loading the config file, so the variable has to be **present** even though nothing reads it. Without it the CLI fails before it ever sees the schema:
+
+```
+PrismaConfigEnvError: Cannot resolve environment variable: DIRECT_URL
+```
+
+Turbo runs in `strict` env mode, which filters out anything a task has not declared — so the variables set on the Vercel project never reached the process. `passThroughEnv` on `@lifedesk/db#build` makes them available **without** putting them in the cache key, which is the right shape here: the generated client depends on `prisma/schema.prisma`, not on connection strings, so rotating a password should not invalidate it.
+
+Watch for this warning in a build log — it names the exact problem:
+
+```
+the following environment variables are set on your Vercel project,
+but missing from "turbo.json" ... @lifedesk/db#build
+```
 
 `typecheck`, `lint` and `test` also depend on `^build` for the same reason — all three need the generated client, and none of them should rely on an install having happened.
 
